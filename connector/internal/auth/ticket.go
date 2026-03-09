@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -50,7 +51,8 @@ func VerifyTicket(token string, secret string, origin string, scope string) (*Ti
 		return nil, errors.New("connector ticket expired")
 	}
 
-	if origin == "" || claims.Origin != origin {
+	normalizedOrigin := normalizeOrigin(origin)
+	if normalizedOrigin == "" || normalizeOrigin(claims.Origin) != normalizedOrigin {
 		return nil, errors.New("connector ticket origin mismatch")
 	}
 
@@ -59,4 +61,28 @@ func VerifyTicket(token string, secret string, origin string, scope string) (*Ti
 	}
 
 	return &claims, nil
+}
+
+func normalizeOrigin(origin string) string {
+	trimmed := strings.TrimSpace(origin)
+	if trimmed == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return trimmed
+	}
+
+	hostname := strings.TrimSuffix(parsed.Hostname(), ".")
+	if hostname == "" {
+		return trimmed
+	}
+
+	parsed.Host = hostname
+	if port := parsed.Port(); port != "" {
+		parsed.Host = hostname + ":" + port
+	}
+
+	return parsed.String()
 }

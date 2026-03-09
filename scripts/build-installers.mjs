@@ -50,6 +50,14 @@ const artifactFamilies = [
 ];
 const downloadsDir = join(repoRoot, "public", "downloads");
 const downloadsManifestPath = join(downloadsDir, "manifest.json");
+const defaultAllowedOrigins = [
+  "http://localhost:*",
+  "https://localhost:*",
+  "http://127.0.0.1:*",
+  "https://127.0.0.1:*",
+  "https://nfc-tool.abcd854884.workers.dev",
+  "https://nfc-tool.abcd854884.workers.dev.",
+].join(",");
 const installerCatalog = [
   {
     platform: "macOS",
@@ -160,7 +168,11 @@ function writeDownloadsManifest() {
   const manifest = {
     generatedAt: new Date().toISOString(),
     installers: installerCatalog.map((installer) => {
-      const match = latestArtifact(files, installer.prefix, installer.extensions);
+      const match = latestArtifact(
+        files,
+        installer.prefix,
+        installer.extensions,
+      );
       return {
         platform: installer.platform,
         label: installer.label,
@@ -171,7 +183,10 @@ function writeDownloadsManifest() {
     }),
   };
 
-  writeFileSync(downloadsManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  writeFileSync(
+    downloadsManifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
 }
 
 function run(command, args, options = {}) {
@@ -424,7 +439,7 @@ function buildMacOS(version, outputDir) {
       <key>NFC_CONNECTOR_DRIVER</key>
       <string>pcsc</string>
       <key>NFC_CONNECTOR_ALLOWED_ORIGINS</key>
-      <string>http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*</string>
+      <string>${defaultAllowedOrigins}</string>
       <key>NFC_CONNECTOR_SHARED_SECRET</key>
       <string>development-shared-secret</string>
     </dict>
@@ -563,7 +578,7 @@ function buildLinux(version, outputDir) {
     [
       'NFC_CONNECTOR_ADDR="127.0.0.1:42619"',
       'NFC_CONNECTOR_DRIVER="pcsc"',
-      'NFC_CONNECTOR_ALLOWED_ORIGINS="http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*"',
+      `NFC_CONNECTOR_ALLOWED_ORIGINS="${defaultAllowedOrigins}"`,
       'NFC_CONNECTOR_SHARED_SECRET="development-shared-secret"',
     ].join("\n") + "\n",
   );

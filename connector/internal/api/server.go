@@ -271,7 +271,7 @@ func (s *Server) withAuth(next http.HandlerFunc, scope string) http.HandlerFunc 
 }
 
 func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) {
-	origin := r.Header.Get("Origin")
+	origin := normalizeOrigin(r.Header.Get("Origin"))
 	if origin == "" || !s.isOriginAllowed(origin) {
 		return
 	}
@@ -282,20 +282,46 @@ func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) isOriginAllowed(origin string) bool {
-	if origin == "" {
+	normalizedOrigin := normalizeOrigin(origin)
+	if normalizedOrigin == "" {
 		return false
 	}
 
 	for _, allowedOrigin := range s.allowedOrigins {
-		if allowedOrigin == origin {
+		normalizedAllowedOrigin := normalizeOrigin(allowedOrigin)
+		if normalizedAllowedOrigin == normalizedOrigin {
 			return true
 		}
-		if matchesOriginPattern(allowedOrigin, origin) {
+		if matchesOriginPattern(normalizedAllowedOrigin, normalizedOrigin) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func normalizeOrigin(origin string) string {
+	trimmed := strings.TrimSpace(origin)
+	if trimmed == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return trimmed
+	}
+
+	hostname := strings.TrimSuffix(parsed.Hostname(), ".")
+	if hostname == "" {
+		return trimmed
+	}
+
+	parsed.Host = hostname
+	if port := parsed.Port(); port != "" {
+		parsed.Host = hostname + ":" + port
+	}
+
+	return parsed.String()
 }
 
 func matchesOriginPattern(pattern string, origin string) bool {

@@ -99,6 +99,16 @@ gh run watch
 - `/api/connector-ticket` 可簽出 token。
 - 前端仍使用 `http://127.0.0.1:42619` 連本機 Connector，因此可直接拿 Windows、macOS、Linux 客戶端去測同一個站台。
 
+### 4. Connector allowlist
+
+如果前端已部署到 Cloudflare Workers，本機 Connector 的 `NFC_CONNECTOR_ALLOWED_ORIGINS` 不能只留 localhost。至少要包含部署站台 origin，例如：
+
+```text
+http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev
+```
+
+目前新產生的安裝器預設值已包含上述 Workers URL；已安裝的舊版 Connector 仍需要手動更新環境變數後重啟。
+
 ## 注意事項
 
 - 站台部署到 Cloudflare 不代表 Connector 也被搬到雲端；Connector 仍然是各平台本機安裝程式。

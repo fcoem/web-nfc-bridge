@@ -13,10 +13,12 @@ import (
 var version = "dev"
 var buildTime = "unknown"
 
+const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev,https://nfc-tool.abcd854884.workers.dev."
+
 func main() {
 	addr := getenv("NFC_CONNECTOR_ADDR", "127.0.0.1:42619")
 	secret := getenv("NFC_CONNECTOR_SHARED_SECRET", "development-shared-secret")
-	allowedOrigins := strings.Split(getenv("NFC_CONNECTOR_ALLOWED_ORIGINS", "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*"), ",")
+	allowedOrigins := strings.Split(getenv("NFC_CONNECTOR_ALLOWED_ORIGINS", defaultAllowedOrigins), ",")
 	driverMode := getenv("NFC_CONNECTOR_DRIVER", "auto")
 	readerName := getenv("NFC_CONNECTOR_MOCK_READER", "Mock ACR1252U-M1")
 
