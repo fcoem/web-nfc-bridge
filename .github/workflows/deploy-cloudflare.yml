@@ -19,6 +19,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*"
 
 concurrency:
   group: deploy-cloudflare-${{ github.ref }}
@@ -38,23 +40,40 @@ jobs:
       NUXT_PUBLIC_CONNECTOR_BASE_URL: ${{ vars.NUXT_PUBLIC_CONNECTOR_BASE_URL || 'http://127.0.0.1:42619' }}
 
     steps:
+      - name: Check deployment secrets
+        id: precheck
+        run: |
+          ready=true
+
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$NUXT_CONNECTOR_SHARED_SECRET" ]; then
+            ready=false
+            echo "Cloudflare deploy skipped: required secrets are not configured for this repository."
+          fi
+
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        if: steps.precheck.outputs.ready == 'true'
         with:
           ref: ${{ inputs.ref || github.ref }}
 
       - uses: pnpm/action-setup@v4
+        if: steps.precheck.outputs.ready == 'true'
         with:
           version: 10.31.0
 
       - uses: actions/setup-node@v4
+        if: steps.precheck.outputs.ready == 'true'
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install frontend dependencies
+        if: steps.precheck.outputs.ready == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Resolve deployment config
+        if: steps.precheck.outputs.ready == 'true'
         run: |
           worker_name="${{ inputs.worker_name || vars.CLOUDFLARE_WORKER_NAME || github.event.repository.name }}"
           site_origin="${{ inputs.site_origin || vars.NUXT_PUBLIC_SITE_ORIGIN }}"
@@ -69,6 +88,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Validate required secrets
+        if: steps.precheck.outputs.ready == 'true'
         run: |
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
@@ -76,7 +96,9 @@ jobs:
           test -n "$NUXT_PUBLIC_SITE_ORIGIN"
 
       - name: Build Cloudflare bundle
+        if: steps.precheck.outputs.ready == 'true'
         run: pnpm run build:cf
 
       - name: Deploy worker
+        if: steps.precheck.outputs.ready == 'true'
         run: pnpm exec wrangler --cwd .output deploy --name "$WORKER_NAME"
