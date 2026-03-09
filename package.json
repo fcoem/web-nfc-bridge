@@ -1,0 +1,36 @@
+{
+  "name": "nfc-tool",
+  "private": true,
+  "version": "0.1.10",
+  "type": "module",
+  "packageManager": "pnpm@10.31.0",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build:app": "nuxt build",
+    "build:cf": "NITRO_PRESET=cloudflare_module nuxt build",
+    "build": "nuxt build && pnpm run installers:build",
+    "ci": "pnpm run build:app && go test ./connector/...",
+    "preview": "nuxt preview",
+    "preview:cf": "pnpm run build:cf && wrangler --cwd .output dev",
+    "prepare": "nuxt prepare",
+    "connector:dev": "go run ./connector/cmd/nfc-connector",
+    "connector:build": "go build -o ./.output/bin/nfc-connector ./connector/cmd/nfc-connector",
+    "connector:test": "go test ./connector/...",
+    "deploy:cf": "pnpm run build:cf && wrangler --cwd .output deploy",
+    "installers:build": "node ./scripts/build-installers.mjs --platform all",
+    "installers:build:macos": "node ./scripts/build-installers.mjs --platform macos",
+    "installers:build:windows-x64": "node ./scripts/build-installers.mjs --platform windows-x64",
+    "installers:build:windows-arm64": "node ./scripts/build-installers.mjs --platform windows-arm64",
+    "installers:build:linux-x64": "node ./scripts/build-installers.mjs --platform linux-x64"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.5.1",
+    "nuxt": "^4.3.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "vue-tsc": "^3.2.5",
+    "wrangler": "^4.71.0"
+  }
+}

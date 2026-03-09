@@ -1,0 +1,82 @@
+name: deploy-cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy
+        required: false
+        default: main
+        type: string
+      worker_name:
+        description: Override Cloudflare Worker name
+        required: false
+        type: string
+      site_origin:
+        description: Override public site origin
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-cloudflare-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      NITRO_PRESET: cloudflare_module
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NUXT_CONNECTOR_SHARED_SECRET: ${{ secrets.NUXT_CONNECTOR_SHARED_SECRET }}
+      NUXT_PUBLIC_CONNECTOR_BASE_URL: ${{ vars.NUXT_PUBLIC_CONNECTOR_BASE_URL || 'http://127.0.0.1:42619' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.31.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve deployment config
+        run: |
+          worker_name="${{ inputs.worker_name || vars.CLOUDFLARE_WORKER_NAME || github.event.repository.name }}"
+          site_origin="${{ inputs.site_origin || vars.NUXT_PUBLIC_SITE_ORIGIN }}"
+
+          if [ -z "$site_origin" ]; then
+            site_origin="https://${worker_name}.workers.dev"
+          fi
+
+          {
+            echo "WORKER_NAME=$worker_name"
+            echo "NUXT_PUBLIC_SITE_ORIGIN=$site_origin"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate required secrets
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test -n "$NUXT_CONNECTOR_SHARED_SECRET"
+          test -n "$NUXT_PUBLIC_SITE_ORIGIN"
+
+      - name: Build Cloudflare bundle
+        run: pnpm run build:cf
+
+      - name: Deploy worker
+        run: pnpm exec wrangler --cwd .output deploy --name "$WORKER_NAME"

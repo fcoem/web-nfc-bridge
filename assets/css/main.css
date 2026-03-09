@@ -1,0 +1,90 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+:root {
+  --ui-radius: 0.875rem;
+  --ui-container: 80rem;
+  --page-wash: radial-gradient(circle at top left, rgba(14, 165, 233, 0.18), transparent 34%);
+  --page-wash-secondary: radial-gradient(
+    circle at top right,
+    rgba(249, 115, 22, 0.14),
+    transparent 30%
+  );
+}
+
+html {
+  background: #eef2f4;
+}
+
+body {
+  min-height: 100vh;
+  font-family: "Manrope", "Noto Sans TC", sans-serif;
+  background:
+    var(--page-wash), var(--page-wash-secondary),
+    linear-gradient(180deg, #f7fafb 0%, #eef2f4 44%, #f8f5ef 100%);
+  color: #17212b;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.erp-demo-shell {
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.erp-panel {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+  border-radius: 1rem;
+}
+
+.erp-metric {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1rem;
+}
+
+.erp-textarea {
+  min-height: 22rem;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.875rem;
+  background: #0f172a;
+  padding: 1rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.erp-textarea:focus {
+  border-color: rgba(14, 165, 233, 0.8);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+.erp-code {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}

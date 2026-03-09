@@ -1,0 +1,17 @@
+# Spectra app data
+.spectra/
+node_modules/
+.nuxt/
+.output/
+dist/
+coverage/
+*.tsbuildinfo
+openspec/.vector-search.db*
+artifacts/
+nfc-connector
+.wrangler/
+.dev.vars
+public/downloads/*.pkg
+public/downloads/*.msi
+public/downloads/*.deb
+public/downloads/*.AppImage

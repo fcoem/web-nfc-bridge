@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-03-09T00:00:00.000Z",
+  "installers": [
+    {
+      "platform": "macOS",
+      "label": "Connector for macOS (Apple Silicon)",
+      "href": "/downloads/connector-macos-arm64-0.1.10.pkg",
+      "fileName": "connector-macos-arm64-0.1.10.pkg",
+      "status": "available"
+    },
+    {
+      "platform": "Windows x64",
+      "label": "Connector for Windows x64",
+      "href": null,
+      "fileName": null,
+      "status": "planned"
+    },
+    {
+      "platform": "Windows ARM64",
+      "label": "Connector for Windows ARM64",
+      "href": null,
+      "fileName": null,
+      "status": "planned"
+    },
+    {
+      "platform": "Linux x64",
+      "label": "Connector for Linux x64",
+      "href": "/downloads/connector-linux-x64-0.1.9.deb",
+      "fileName": "connector-linux-x64-0.1.9.deb",
+      "status": "available"
+    }
+  ]
+}
