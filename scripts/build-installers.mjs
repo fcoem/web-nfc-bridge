@@ -57,6 +57,8 @@ const defaultAllowedOrigins = [
   "https://127.0.0.1:*",
   "https://nfc-tool.abcd854884.workers.dev",
   "https://nfc-tool.abcd854884.workers.dev.",
+  "https://nfc.yudefine.com.tw",
+  "https://nfc.yudefine.com.tw.",
 ].join(",");
 const installerCatalog = [
   {

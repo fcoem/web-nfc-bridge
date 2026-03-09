@@ -50,7 +50,7 @@
 - 確認 Connector process 已啟動
 - 確認 `NFC_CONNECTOR_ALLOWED_ORIGINS` 包含網站 origin
 - 開發模式可使用 `http://localhost:*`、`https://localhost:*`、`http://127.0.0.1:*` 這類 wildcard 規則允許本機不同 port
-- 若 Web console 部署在 Cloudflare Workers，allowlist 也要包含正式站台 origin，例如 `https://nfc-tool.abcd854884.workers.dev`
+- 若 Web console 部署在 Cloudflare Workers 或自訂網域，allowlist 也要包含正式站台 origin，例如 `https://nfc-tool.abcd854884.workers.dev` 或 `https://nfc.yudefine.com.tw`
 
 ### Reader missing
 

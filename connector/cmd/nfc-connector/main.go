@@ -13,7 +13,7 @@ import (
 var version = "dev"
 var buildTime = "unknown"
 
-const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev,https://nfc-tool.abcd854884.workers.dev."
+const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev,https://nfc-tool.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
 
 func main() {
 	addr := getenv("NFC_CONNECTOR_ADDR", "127.0.0.1:42619")

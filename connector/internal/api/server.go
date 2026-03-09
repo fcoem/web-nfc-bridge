@@ -271,7 +271,7 @@ func (s *Server) withAuth(next http.HandlerFunc, scope string) http.HandlerFunc 
 }
 
 func (s *Server) applyCORS(w http.ResponseWriter, r *http.Request) {
-	origin := normalizeOrigin(r.Header.Get("Origin"))
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
 	if origin == "" || !s.isOriginAllowed(origin) {
 		return
 	}
