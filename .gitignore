@@ -8,7 +8,7 @@ coverage/
 *.tsbuildinfo
 openspec/.vector-search.db*
 artifacts/
-nfc-connector
+/nfc-connector
 .wrangler/
 .dev.vars
 .DS_Store
