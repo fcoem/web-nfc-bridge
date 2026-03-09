@@ -11,6 +11,8 @@ artifacts/
 nfc-connector
 .wrangler/
 .dev.vars
+.DS_Store
+.vscode/*.log
 public/downloads/*.pkg
 public/downloads/*.msi
 public/downloads/*.deb
