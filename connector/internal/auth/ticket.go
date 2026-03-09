@@ -79,8 +79,9 @@ func normalizeOrigin(origin string) string {
 		return trimmed
 	}
 
+	port := parsed.Port()
 	parsed.Host = hostname
-	if port := parsed.Port(); port != "" {
+	if port != "" {
 		parsed.Host = hostname + ":" + port
 	}
 

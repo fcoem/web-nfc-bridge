@@ -33,3 +33,29 @@ func TestHealthEchoesOriginalOriginWithTrailingDot(t *testing.T) {
 		t.Fatalf("expected CORS origin to echo request origin, got %q", got)
 	}
 }
+
+func TestApplyCORSAllowsLocalhostWildcardOrigin(t *testing.T) {
+	t.Parallel()
+
+	driver := bridge.NewMockDriver("Mock Reader")
+	t.Cleanup(func() {
+		_ = driver.Close()
+	})
+
+	service := bridge.NewService(driver)
+	server := NewServer(service, []string{"http://localhost:*"}, "test-secret", "test-version", "test-build-time")
+
+	if !server.isOriginAllowed("http://localhost:3001") {
+		t.Fatal("expected localhost wildcard origin to be allowed")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req.Header.Set("Origin", "http://localhost:3001")
+	recorder := httptest.NewRecorder()
+
+	server.applyCORS(recorder, req)
+
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:3001" {
+		t.Fatalf("expected wildcard localhost origin to be allowed, got %q", got)
+	}
+}

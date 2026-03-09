@@ -81,6 +81,7 @@
 - 若錯誤訊息提到 `card is not NDEF formatted`，代表目前卡片不在 v1 支援範圍內
 - 若錯誤訊息提到 `card is NDEF read-only`，代表卡片 Capability Container 指出目前不可寫
 - 若錯誤訊息提到 `payload requires ... bytes`，代表卡片 user data area 小於這次 TLV 所需空間
+- 若錯誤訊息提到 `card rejected write at first data page 4: 63 00`，代表卡片在第一個 user data page 就拒絕寫入；通常是卡片已被 lock、實際不可寫，或需要先重新格式化
 - 若錯誤訊息提到 `unexpected read response` 或 `unexpected write response`，代表讀卡機或卡片對該次 PC/SC page I/O 沒有給出成功狀態，應先重新放卡再試
 
 ### Write completed

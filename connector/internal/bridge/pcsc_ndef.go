@@ -25,6 +25,15 @@ type type2Capability struct {
 	ReadOnly      bool
 }
 
+type type2WriteResponseError struct {
+	Page     int
+	Response []byte
+}
+
+func (e *type2WriteResponseError) Error() string {
+	return describeType2WriteResponse(e.Page, e.Response)
+}
+
 func buildNDEFMessage(request *WriteRequest) []byte {
 	typeBytes := []byte(request.MediaType)
 	payloadBytes := request.EncodedPayload
@@ -107,10 +116,21 @@ func writeType2Pages(card *scard.Card, startPage int, payload []byte) error {
 			return err
 		}
 		if len(response) != 2 || response[0] != 0x90 || response[1] != 0x00 {
-			return fmt.Errorf("unexpected write response at page %d: % X", page, response)
+			return &type2WriteResponseError{Page: page, Response: append([]byte(nil), response...)}
 		}
 	}
 	return nil
+}
+
+func describeType2WriteResponse(page int, response []byte) string {
+	if len(response) == 2 && response[0] == 0x63 && response[1] == 0x00 {
+		if page == type2UserDataPage {
+			return fmt.Sprintf("card rejected write at first data page %d: % X; tag may be locked, read-only, or require reformatting", page, response)
+		}
+		return fmt.Sprintf("card rejected write at page %d: % X; tag may be locked or no longer writable", page, response)
+	}
+
+	return fmt.Sprintf("unexpected write response at page %d: % X", page, response)
 }
 
 func verifyType2Write(card *scard.Card, expected []byte) error {

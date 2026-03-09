@@ -288,11 +288,12 @@ func (s *Server) isOriginAllowed(origin string) bool {
 	}
 
 	for _, allowedOrigin := range s.allowedOrigins {
-		normalizedAllowedOrigin := normalizeOrigin(allowedOrigin)
+		trimmedAllowedOrigin := strings.TrimSpace(allowedOrigin)
+		normalizedAllowedOrigin := normalizeOrigin(trimmedAllowedOrigin)
 		if normalizedAllowedOrigin == normalizedOrigin {
 			return true
 		}
-		if matchesOriginPattern(normalizedAllowedOrigin, normalizedOrigin) {
+		if matchesOriginPattern(trimmedAllowedOrigin, normalizedOrigin) {
 			return true
 		}
 	}
@@ -316,8 +317,9 @@ func normalizeOrigin(origin string) string {
 		return trimmed
 	}
 
+	port := parsed.Port()
 	parsed.Host = hostname
-	if port := parsed.Port(); port != "" {
+	if port != "" {
 		parsed.Host = hostname + ":" + port
 	}
 
@@ -325,11 +327,12 @@ func normalizeOrigin(origin string) string {
 }
 
 func matchesOriginPattern(pattern string, origin string) bool {
-	if !strings.Contains(pattern, ":*") {
+	pattern = strings.TrimSpace(pattern)
+	if !strings.HasSuffix(pattern, ":*") {
 		return false
 	}
 
-	patternURL, err := url.Parse(strings.Replace(pattern, ":*", "", 1))
+	patternURL, err := url.Parse(strings.TrimSuffix(pattern, ":*"))
 	if err != nil {
 		return false
 	}

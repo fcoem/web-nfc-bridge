@@ -124,6 +124,23 @@ const readJsonPretty = computed(() => {
   return JSON.stringify(cardJsonContent.value, null, 2);
 });
 
+const readJsonHint = computed(() => {
+  if (readJsonPretty.value) {
+    return null;
+  }
+
+  const ndefReadError = cardSummary.value?.details?.ndefReadError;
+  if (ndefReadError) {
+    return `已讀到 UID，但 NDEF JSON 讀取失敗：${ndefReadError}`;
+  }
+
+  if (cardSummary.value?.uid) {
+    return "已讀到 UID，但卡片上目前沒有可解析的 JSON。";
+  }
+
+  return null;
+});
+
 const readStatusLabel = computed(() => {
   if (isReading.value) {
     return "等待卡片貼上";
@@ -356,6 +373,9 @@ async function handleWriteCard() {
             <div class="rounded-xl border border-slate-200 bg-white p-4">
               <p class="font-semibold text-slate-950">讀到的 JSON</p>
               <pre class="erp-code mt-3">{{ readJsonPretty || "尚未讀到 JSON 內容" }}</pre>
+              <p v-if="readJsonHint" class="mt-3 text-sm text-amber-700">
+                {{ readJsonHint }}
+              </p>
             </div>
           </div>
         </UCard>

@@ -148,13 +148,38 @@ func (d *PCSCDarwinDriver) ReadCard(_ context.Context, session *Session, operati
 		},
 	}
 
-	capability, err := readType2Capability(card)
-	if err == nil {
-		mediaType, payload, readErr := readType2NDEF(card, capability)
-		if readErr == nil {
-			result.MediaType = mediaType
-			result.Payload = payload
+	var ndefReadErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		capability, capabilityErr := readType2Capability(card)
+		if capabilityErr != nil {
+			ndefReadErr = capabilityErr
+			if attempt < 2 {
+				time.Sleep(40 * time.Millisecond)
+			}
+			continue
 		}
+
+		mediaType, payload, readErr := readType2NDEF(card, capability)
+		if readErr != nil {
+			ndefReadErr = readErr
+			if attempt < 2 {
+				time.Sleep(40 * time.Millisecond)
+			}
+			continue
+		}
+
+		result.MediaType = mediaType
+		result.Payload = payload
+		ndefReadErr = nil
+		if mediaType != "" || payload != nil || attempt == 2 {
+			break
+		}
+
+		time.Sleep(40 * time.Millisecond)
+	}
+
+	if ndefReadErr != nil {
+		result.Details["ndefReadError"] = ndefReadErr.Error()
 	}
 
 	d.emit(Event{
@@ -240,6 +265,24 @@ func (d *PCSCDarwinDriver) WriteCard(_ context.Context, session *Session, reques
 	}
 
 	if err := writeType2Pages(card, type2UserDataPage, tlv); err != nil {
+		var writeResponseErr *type2WriteResponseError
+		if errors.As(err, &writeResponseErr) {
+			return &CardWriteResult{
+				SessionID: session.ID,
+				Reader:    session.ReaderName,
+				Operation: request.Operation,
+				Accepted:  false,
+				Details: map[string]string{
+					"driver":       d.DriverName(),
+					"profile":      request.Profile,
+					"mediaType":    request.MediaType,
+					"payloadType":  request.PayloadType,
+					"reason":       writeResponseErr.Error(),
+					"rejectedPage": fmt.Sprintf("%d", writeResponseErr.Page),
+					"response":     strings.ToUpper(hex.EncodeToString(writeResponseErr.Response)),
+				},
+			}, nil
+		}
 		return nil, err
 	}
 	if err := card.Disconnect(scard.ResetCard); err != nil {
