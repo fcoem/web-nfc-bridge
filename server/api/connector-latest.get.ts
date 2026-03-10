@@ -1,11 +1,4 @@
-let cached: { version: string; fetchedAt: number } | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000;
-
 export default defineEventHandler(async (event) => {
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
-    return { version: cached.version };
-  }
-
   const config = useRuntimeConfig(event);
   const repo = config.public.connectorRepo as string;
 
@@ -25,8 +18,6 @@ export default defineEventHandler(async (event) => {
 
   const release = (await response.json()) as { tag_name: string };
   const version = release.tag_name.replace(/^v/, "");
-
-  cached = { version, fetchedAt: Date.now() };
 
   return { version };
 });
