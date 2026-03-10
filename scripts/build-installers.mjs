@@ -530,7 +530,7 @@ function buildWindows(version, outputDir, arch) {
         <File Source="${binaryPath.replace(/\\/g, "/")}" KeyPath="yes" />
       </Component>
       <Component Id="AutoStart" Guid="*">
-        <RegistryValue Root="HKMU" Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run" Name="NFCToolConnector" Type="string" Value="[INSTALLFOLDER]nfc-connector.exe" KeyPath="yes" />
+        <RegistryValue Root="HKMU" Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run" Name="NFCToolConnector" Type="string" Value="&quot;[INSTALLFOLDER]nfc-connector.exe&quot; --watchdog" KeyPath="yes" />
       </Component>
     </ComponentGroup>
   </Fragment>

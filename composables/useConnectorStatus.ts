@@ -440,6 +440,43 @@ export function useConnectorStatus() {
     }
   }
 
+  const POLL_INTERVAL_MS = 3000;
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  function startPolling() {
+    if (pollTimer || import.meta.server) return;
+    pollTimer = setInterval(async () => {
+      try {
+        const response = await fetch(`${config.public.connectorBaseUrl}/health`);
+        if (response.ok) {
+          stopPolling();
+          await refresh();
+        }
+      } catch {
+        // Still offline, keep polling
+      }
+    }, POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  watch(state, (newState) => {
+    if (newState === "offline") {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  });
+
+  onUnmounted(() => {
+    stopPolling();
+  });
+
   const readerState = computed(() => {
     if (state.value !== "online") {
       return "waiting-for-connector";

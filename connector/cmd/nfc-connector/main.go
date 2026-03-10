@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -20,6 +22,11 @@ var buildTime = "unknown"
 const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--watchdog" {
+		runWatchdog()
+		return
+	}
+
 	addr := getenv("NFC_CONNECTOR_ADDR", "127.0.0.1:42619")
 	secret := getenv("NFC_CONNECTOR_SHARED_SECRET", "development-shared-secret")
 	allowedOrigins := strings.Split(getenv("NFC_CONNECTOR_ALLOWED_ORIGINS", defaultAllowedOrigins), ",")
@@ -65,6 +72,33 @@ func main() {
 	log.Printf("nfc connector listening on http://%s (driver=%s version=%s buildTime=%s)", addr, service.DriverName(), version, buildTime)
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
+	}
+}
+
+func runWatchdog() {
+	if runtime.GOOS != "windows" {
+		log.Fatal("--watchdog is only supported on Windows; use launchd (macOS) or systemd (Linux) instead")
+	}
+
+	const restartDelay = 3 * time.Second
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatalf("watchdog: cannot resolve executable path: %v", err)
+	}
+
+	log.Printf("watchdog: supervising %s", exe)
+	for {
+		cmd := exec.Command(exe)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Env = os.Environ()
+
+		if err := cmd.Run(); err != nil {
+			log.Printf("watchdog: process exited: %v, restarting in %s", err, restartDelay)
+		} else {
+			log.Printf("watchdog: process exited cleanly, restarting in %s", restartDelay)
+		}
+		time.Sleep(restartDelay)
 	}
 }
 

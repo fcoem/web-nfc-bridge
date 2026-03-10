@@ -325,9 +325,12 @@ async function handleWriteCard() {
       <section v-if="state === 'offline'" class="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="space-y-1">
-            <p class="font-semibold text-amber-900">Connector 未連線</p>
+            <p class="font-semibold text-amber-900">
+              <UIcon name="i-lucide-loader-circle" class="mr-1 inline-block animate-spin align-text-bottom" />
+              Connector 未連線，正在嘗試連線⋯
+            </p>
             <p class="text-amber-800">
-              請先安裝 Connector<template v-if="connectorVersion"> v{{ connectorVersion }}</template>，安裝完成後重新整理此頁面。
+              若尚未安裝，請下載 Connector<template v-if="connectorVersion"> v{{ connectorVersion }}</template>，安裝後會自動連線。
             </p>
           </div>
           <ClientOnly>
@@ -492,6 +495,35 @@ async function handleWriteCard() {
         </p>
         <pre class="erp-code mt-4">{{ erpResultPreview }}</pre>
       </section>
+
+      <details class="text-sm text-slate-500">
+        <summary class="cursor-pointer select-none hover:text-slate-700">如何移除 Connector？</summary>
+        <div class="mt-3 space-y-3 rounded-xl border border-slate-200 bg-white p-4 text-slate-600">
+          <div>
+            <p class="font-semibold text-slate-700">macOS</p>
+            <ol class="mt-1 list-inside list-decimal space-y-0.5">
+              <li>終端機執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">launchctl unload ~/Library/LaunchAgents/com.webnfcbridge.connector.plist</code></li>
+              <li>刪除檔案 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">rm ~/Library/LaunchAgents/com.webnfcbridge.connector.plist</code></li>
+              <li>刪除程式 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo rm /usr/local/bin/nfc-connector</code></li>
+              <li>或透過 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo pkgutil --forget com.webnfcbridge.connector</code> 清除安裝紀錄</li>
+            </ol>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700">Windows</p>
+            <ol class="mt-1 list-inside list-decimal space-y-0.5">
+              <li>開啟「設定  &gt; 應用程式 &gt; 已安裝的應用程式」</li>
+              <li>搜尋「Web NFC Bridge Connector」，點擊「解除安裝」</li>
+            </ol>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-700">Linux</p>
+            <ol class="mt-1 list-inside list-decimal space-y-0.5">
+              <li>執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo dpkg -r nfc-connector</code></li>
+              <li>或 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo apt remove nfc-connector</code></li>
+            </ol>
+          </div>
+        </div>
+      </details>
     </div>
   </main>
 </template>
