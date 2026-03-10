@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -20,9 +21,26 @@ func main() {
 	secret := getenv("NFC_CONNECTOR_SHARED_SECRET", "development-shared-secret")
 	allowedOrigins := strings.Split(getenv("NFC_CONNECTOR_ALLOWED_ORIGINS", defaultAllowedOrigins), ",")
 
-	driver, err := bridge.NewPCSCDriver()
-	if err != nil {
-		log.Fatalf("connector driver init: %v", err)
+	var driver bridge.Driver
+	pcscDriver, pcscErr := bridge.NewPCSCDriver()
+	if pcscErr == nil {
+		health := pcscDriver.Health(context.Background())
+		if health["status"] == "ok" {
+			driver = pcscDriver
+		} else {
+			log.Printf("pcsc driver degraded (status=%v), trying direct driver", health["status"])
+			pcscDriver.Close()
+		}
+	} else {
+		log.Printf("pcsc driver unavailable: %v", pcscErr)
+	}
+
+	if driver == nil {
+		directDriver, directErr := bridge.NewDirectDriver()
+		if directErr != nil {
+			log.Fatalf("no working driver available: pcsc=%v direct=%v", pcscErr, directErr)
+		}
+		driver = directDriver
 	}
 	defer driver.Close()
 
