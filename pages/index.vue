@@ -353,7 +353,7 @@ async function handleWriteCard() {
             </div>
             <UButton
               v-else
-              :to="`https://github.com/${connectorRepo}/releases/latest`"
+              :to="`https://github.com/${connectorRepo}/releases`"
               target="_blank"
               color="primary"
               size="md"
