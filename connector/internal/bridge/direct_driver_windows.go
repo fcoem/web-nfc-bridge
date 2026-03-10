@@ -96,7 +96,7 @@ func (d *DirectDriver) listReadersLocked() ([]Reader, error) {
 		items = append(items, Reader{
 			Name:       name,
 			Driver:     d.DriverName(),
-			CardPreset: cardPresent,
+			CardPresent: cardPresent,
 		})
 	}
 	return items, nil
@@ -133,7 +133,7 @@ func (d *DirectDriver) ConnectSession(_ context.Context, readerName string) (*Se
 	d.emit(Event{
 		Type:      "reader.status",
 		Status:    "ready",
-		Reader:    &Reader{Name: name, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: name, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 	})
 	return session, nil
@@ -191,45 +191,17 @@ func (d *DirectDriver) ReadCard(_ context.Context, session *Session, operation s
 		},
 	}
 
-	// Read NDEF with retries
-	var ndefReadErr error
-	for attempt := 0; attempt < 3; attempt++ {
-		capability, capabilityErr := readType2Capability(card)
-		if capabilityErr != nil {
-			ndefReadErr = capabilityErr
-			if attempt < 2 {
-				time.Sleep(40 * time.Millisecond)
-			}
-			continue
-		}
-
-		mediaType, payload, readErr := readType2NDEF(card, capability)
-		if readErr != nil {
-			ndefReadErr = readErr
-			if attempt < 2 {
-				time.Sleep(40 * time.Millisecond)
-			}
-			continue
-		}
-
-		result.MediaType = mediaType
-		result.Payload = payload
-		ndefReadErr = nil
-		if mediaType != "" || payload != nil || attempt == 2 {
-			break
-		}
-
-		time.Sleep(40 * time.Millisecond)
-	}
-
-	if ndefReadErr != nil {
-		result.Details["ndefReadError"] = ndefReadErr.Error()
+	ndefResult := readNDEFWithRetry(card)
+	result.MediaType = ndefResult.MediaType
+	result.Payload = ndefResult.Payload
+	if ndefResult.Err != nil {
+		result.Details["ndefReadError"] = ndefResult.Err.Error()
 	}
 
 	d.emit(Event{
 		Type:      "card.read.complete",
 		Status:    "ok",
-		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload: map[string]any{
 			"uid":       uid,
@@ -397,7 +369,7 @@ func (d *DirectDriver) WriteCard(_ context.Context, session *Session, request *W
 	d.emit(Event{
 		Type:      "card.write.complete",
 		Status:    "ok",
-		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload: map[string]any{
 			"operation":   request.Operation,
@@ -449,13 +421,13 @@ func (d *DirectDriver) monitor() {
 				d.lastReaderSet = currentSet
 			}
 
-			cardPresent := len(readers) > 0 && readers[0].CardPreset
+			cardPresent := len(readers) > 0 && readers[0].CardPresent
 			if cardPresent != d.lastCardPresent {
 				eventType := "card.removed"
 				if cardPresent {
 					eventType = "card.present"
 				}
-				d.emit(Event{Type: eventType, Status: map[bool]string{true: "ready", false: "idle"}[cardPresent], Reader: directFirstReader(readers)})
+				d.emit(Event{Type: eventType, Status: map[bool]string{true: "ready", false: "idle"}[cardPresent], Reader: firstReader(readers)})
 				d.lastCardPresent = cardPresent
 			}
 		case <-d.stop:
@@ -557,13 +529,6 @@ func extractToken(s, prefix, suffix string) string {
 	return s[start : start+end]
 }
 
-func directFirstReader(readers []Reader) *Reader {
-	if len(readers) == 0 {
-		return nil
-	}
-	reader := readers[0]
-	return &reader
-}
 
 // Ensure DirectDriver implements Driver at compile time.
 var _ Driver = (*DirectDriver)(nil)

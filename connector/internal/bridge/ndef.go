@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
+	"time"
 )
 
 // CardTransmitter abstracts APDU command transmission so NDEF logic
@@ -20,6 +20,21 @@ const (
 	type2UserDataPage   = 4
 	type2PageSize       = 4
 	type2ReadChunkBytes = 0x10
+
+	// NDEF record flags
+	ndefFlagMB          = 0x80 // Message Begin
+	ndefFlagME          = 0x40 // Message End
+	ndefFlagSR          = 0x10 // Short Record
+	ndefFlagIL          = 0x08 // ID Length present
+	ndefTNFMediaType    = 0x02 // TNF: Media-type (RFC 2046)
+
+	// TLV tags
+	tlvNDEFMessage    = 0x03
+	tlvTerminator     = 0xFE
+	tlvExtendedLength = 0xFF
+
+	// Capability container
+	ccMagicByte = 0xE1
 )
 
 type type2Capability struct {
@@ -40,11 +55,11 @@ func buildNDEFMessage(request *WriteRequest) []byte {
 	typeBytes := []byte(request.MediaType)
 	payloadBytes := request.EncodedPayload
 
-	flags := byte(0x80 | 0x40 | 0x02)
+	flags := byte(ndefFlagMB | ndefFlagME | ndefTNFMediaType)
 	message := make([]byte, 0, len(payloadBytes)+len(typeBytes)+8)
 
 	if len(payloadBytes) <= 0xFF {
-		flags |= 0x10
+		flags |= ndefFlagSR
 		message = append(message, flags, byte(len(typeBytes)), byte(len(payloadBytes)))
 	} else {
 		message = append(
@@ -65,14 +80,14 @@ func buildNDEFMessage(request *WriteRequest) []byte {
 
 func buildType2TLV(message []byte) []byte {
 	tl := make([]byte, 0, len(message)+4)
-	tl = append(tl, 0x03)
+	tl = append(tl, tlvNDEFMessage)
 	if len(message) <= 0xFE {
 		tl = append(tl, byte(len(message)))
 	} else {
-		tl = append(tl, 0xFF, byte(len(message)>>8), byte(len(message)))
+		tl = append(tl, tlvExtendedLength, byte(len(message)>>8), byte(len(message)))
 	}
 	tl = append(tl, message...)
-	tl = append(tl, 0xFE)
+	tl = append(tl, tlvTerminator)
 	if rem := len(tl) % type2PageSize; rem != 0 {
 		tl = append(tl, bytes.Repeat([]byte{0x00}, type2PageSize-rem)...)
 	}
@@ -87,7 +102,7 @@ func readType2Capability(card CardTransmitter) (*type2Capability, error) {
 	if len(data) < 4 {
 		return nil, errors.New("invalid capability container length")
 	}
-	if data[0] != 0xE1 {
+	if data[0] != ccMagicByte {
 		return nil, errors.New("card is not NDEF formatted")
 	}
 	return &type2Capability{
@@ -200,7 +215,50 @@ func isType2ReadLengthError(err error) bool {
 }
 
 func requiredType2Pages(length int) int {
-	return int(math.Ceil(float64(length) / float64(type2PageSize)))
+	return (length + type2PageSize - 1) / type2PageSize
+}
+
+// NDEFReadResult holds the result of an NDEF read attempt with retries.
+type NDEFReadResult struct {
+	MediaType string
+	Payload   map[string]any
+	Err       error
+}
+
+const (
+	ndefReadMaxAttempts = 3
+	ndefReadRetryDelay  = 40 * time.Millisecond
+)
+
+// readNDEFWithRetry attempts to read NDEF data from a Type 2 tag with retries.
+func readNDEFWithRetry(card CardTransmitter) NDEFReadResult {
+	var lastErr error
+	for attempt := 0; attempt < ndefReadMaxAttempts; attempt++ {
+		capability, err := readType2Capability(card)
+		if err != nil {
+			lastErr = err
+			if attempt < ndefReadMaxAttempts-1 {
+				time.Sleep(ndefReadRetryDelay)
+			}
+			continue
+		}
+
+		mediaType, payload, err := readType2NDEF(card, capability)
+		if err != nil {
+			lastErr = err
+			if attempt < ndefReadMaxAttempts-1 {
+				time.Sleep(ndefReadRetryDelay)
+			}
+			continue
+		}
+
+		if mediaType != "" || payload != nil || attempt == ndefReadMaxAttempts-1 {
+			return NDEFReadResult{MediaType: mediaType, Payload: payload}
+		}
+
+		time.Sleep(ndefReadRetryDelay)
+	}
+	return NDEFReadResult{Err: lastErr}
 }
 
 func readType2NDEF(card CardTransmitter, capability *type2Capability) (string, map[string]any, error) {
@@ -238,13 +296,13 @@ func parseType2NDEFPayload(data []byte) (string, []byte, error) {
 		return "", nil, nil
 	}
 
-	if data[0] != 0x03 {
+	if data[0] != tlvNDEFMessage {
 		return "", nil, nil
 	}
 
 	index := 1
 	length := 0
-	if data[index] == 0xFF {
+	if data[index] == tlvExtendedLength {
 		if len(data) < 4 {
 			return "", nil, errors.New("invalid extended NDEF TLV")
 		}
@@ -270,10 +328,10 @@ func parseNDEFMessage(message []byte) (string, []byte, error) {
 
 	flags := message[0]
 	tnf := flags & 0x07
-	shortRecord := flags&0x10 != 0
-	idLengthPresent := flags&0x08 != 0
+	shortRecord := flags&ndefFlagSR != 0
+	idLengthPresent := flags&ndefFlagIL != 0
 
-	if tnf != 0x02 {
+	if tnf != ndefTNFMediaType {
 		return "", nil, nil
 	}
 

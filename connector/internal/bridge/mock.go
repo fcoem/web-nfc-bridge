@@ -39,7 +39,7 @@ func (d *MockDriver) ListReaders(context.Context) ([]Reader, error) {
 	return []Reader{{
 		Name:       d.readerName,
 		Driver:     d.DriverName(),
-		CardPreset: true,
+		CardPresent: true,
 	}}, nil
 }
 
@@ -48,13 +48,13 @@ func (d *MockDriver) ConnectSession(context.Context, string) (*Session, error) {
 	d.emit(Event{
 		Type:      "reader.status",
 		Status:    "ready",
-		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 	})
 	d.emit(Event{
 		Type:      "card.present",
 		Status:    "ready",
-		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload:   map[string]any{"mode": "mock"},
 	})
@@ -75,7 +75,7 @@ func (d *MockDriver) ReadCard(context.Context, *Session, string) (*CardReadResul
 	d.emit(Event{
 		Type:   "card.read.complete",
 		Status: "ok",
-		Reader: &Reader{Name: d.readerName, Driver: d.DriverName(), CardPreset: true},
+		Reader: &Reader{Name: d.readerName, Driver: d.DriverName(), CardPresent: true},
 		Payload: map[string]any{
 			"uid": result.UID,
 		},
@@ -101,7 +101,7 @@ func (d *MockDriver) WriteCard(_ context.Context, session *Session, request *Wri
 	d.emit(Event{
 		Type:      "card.write.complete",
 		Status:    "ok",
-		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: d.readerName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload: map[string]any{
 			"operation":   request.Operation,
@@ -138,7 +138,7 @@ func (d *MockDriver) loop() {
 			d.emit(Event{
 				Type:   "reader.status",
 				Status: "ready",
-				Reader: &Reader{Name: d.readerName, Driver: d.DriverName(), CardPreset: true},
+				Reader: &Reader{Name: d.readerName, Driver: d.DriverName(), CardPresent: true},
 				Payload: map[string]any{
 					"heartbeat": fmt.Sprintf("%d", time.Now().Unix()),
 				},

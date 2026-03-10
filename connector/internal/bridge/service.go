@@ -11,7 +11,7 @@ import (
 type Reader struct {
 	Name       string `json:"name"`
 	Driver     string `json:"driver"`
-	CardPreset bool   `json:"cardPresent"`
+	CardPresent bool   `json:"cardPresent"`
 }
 
 type CardReadResult struct {
@@ -154,4 +154,12 @@ func NewSession(readerName string, driverName string) *Session {
 		Driver:     driverName,
 		CreatedAt:  time.Now().UTC(),
 	}
+}
+
+func firstReader(readers []Reader) *Reader {
+	if len(readers) == 0 {
+		return nil
+	}
+	reader := readers[0]
+	return &reader
 }

@@ -100,7 +100,7 @@ func (d *PCSCDriver) listReadersLocked() ([]Reader, error) {
 		items = append(items, Reader{
 			Name:       name,
 			Driver:     d.DriverName(),
-			CardPreset: false,
+			CardPresent: false,
 		})
 	}
 	return items, nil
@@ -132,7 +132,7 @@ func (d *PCSCDriver) ConnectSession(_ context.Context, readerName string) (*Sess
 	d.emit(Event{
 		Type:      "reader.status",
 		Status:    "ready",
-		Reader:    &Reader{Name: resolvedReader, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: resolvedReader, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 	})
 	return session, nil
@@ -177,44 +177,17 @@ func (d *PCSCDriver) ReadCard(_ context.Context, session *Session, operation str
 		},
 	}
 
-	var ndefReadErr error
-	for attempt := 0; attempt < 3; attempt++ {
-		capability, capabilityErr := readType2Capability(card)
-		if capabilityErr != nil {
-			ndefReadErr = capabilityErr
-			if attempt < 2 {
-				time.Sleep(40 * time.Millisecond)
-			}
-			continue
-		}
-
-		mediaType, payload, readErr := readType2NDEF(card, capability)
-		if readErr != nil {
-			ndefReadErr = readErr
-			if attempt < 2 {
-				time.Sleep(40 * time.Millisecond)
-			}
-			continue
-		}
-
-		result.MediaType = mediaType
-		result.Payload = payload
-		ndefReadErr = nil
-		if mediaType != "" || payload != nil || attempt == 2 {
-			break
-		}
-
-		time.Sleep(40 * time.Millisecond)
-	}
-
-	if ndefReadErr != nil {
-		result.Details["ndefReadError"] = ndefReadErr.Error()
+	ndefResult := readNDEFWithRetry(card)
+	result.MediaType = ndefResult.MediaType
+	result.Payload = ndefResult.Payload
+	if ndefResult.Err != nil {
+		result.Details["ndefReadError"] = ndefResult.Err.Error()
 	}
 
 	d.emit(Event{
 		Type:      "card.read.complete",
 		Status:    "ok",
-		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload: map[string]any{
 			"uid":       uid,
@@ -356,7 +329,7 @@ func (d *PCSCDriver) WriteCard(_ context.Context, session *Session, request *Wri
 	d.emit(Event{
 		Type:      "card.write.complete",
 		Status:    "ok",
-		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPreset: true},
+		Reader:    &Reader{Name: session.ReaderName, Driver: d.DriverName(), CardPresent: true},
 		SessionID: session.ID,
 		Payload: map[string]any{
 			"operation":   request.Operation,
@@ -417,7 +390,7 @@ func (d *PCSCDriver) monitor() {
 				d.lastReaderSet = currentSet
 			}
 
-			cardPresent := len(readers) > 0 && readers[0].CardPreset
+			cardPresent := len(readers) > 0 && readers[0].CardPresent
 			if cardPresent != d.lastCardPresent {
 				eventType := "card.removed"
 				if cardPresent {
@@ -498,10 +471,3 @@ func parseUID(response []byte) string {
 	return strings.ToUpper(hex.EncodeToString(response))
 }
 
-func firstReader(readers []Reader) *Reader {
-	if len(readers) == 0 {
-		return nil
-	}
-	reader := readers[0]
-	return &reader
-}
