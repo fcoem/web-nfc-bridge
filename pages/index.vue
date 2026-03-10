@@ -31,6 +31,7 @@ const {
 } = useConnectorStatus();
 
 const { recommended: recommendedDownload, others: otherDownloads, version: connectorVersion } = useConnectorDownload();
+const connectorRepo = useRuntimeConfig().public.connectorRepo as string;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -350,6 +351,16 @@ async function handleWriteCard() {
                 {{ dl.label }}
               </a>
             </div>
+            <UButton
+              v-else
+              :to="`https://github.com/${connectorRepo}/releases/latest`"
+              target="_blank"
+              color="primary"
+              size="md"
+              trailing-icon="i-lucide-external-link"
+            >
+              前往 GitHub 下載
+            </UButton>
           </ClientOnly>
         </div>
       </section>
