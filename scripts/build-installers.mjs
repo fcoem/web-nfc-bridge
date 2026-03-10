@@ -525,7 +525,7 @@ function buildWindows(version, outputDir, arch) {
     </Feature>
     <CustomAction Id="LaunchConnector" FileRef="ConnectorExe" ExeCommand="--watchdog" Return="asyncNoWait" />
     <InstallExecuteSequence>
-      <Custom Action="LaunchConnector" After="InstallFinalize">NOT Installed OR REINSTALL</Custom>
+      <Custom Action="LaunchConnector" After="InstallFinalize" Condition="NOT Installed OR REINSTALL" />
     </InstallExecuteSequence>
   </Package>
   <Fragment>
