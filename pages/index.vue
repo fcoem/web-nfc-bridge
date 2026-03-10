@@ -508,10 +508,10 @@ async function handleWriteCard() {
               </ul>
             </div>
             <div>
-              <p class="font-semibold text-slate-700">Windows</p>
+              <p class="font-semibold text-slate-700">Windows（以系統管理員身分開啟終端機）</p>
               <ul class="mt-1 list-inside list-disc space-y-0.5">
-                <li>停用：工作管理員 &gt; 開機 &gt; 找到「NFCToolConnector」&gt; 停用；再於工作管理員結束執行中的 nfc-connector.exe</li>
-                <li>啟用：工作管理員 &gt; 開機 &gt; 找到「NFCToolConnector」&gt; 啟用；重新登入或手動執行程式</li>
+                <li>停用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">taskkill /IM nfc-connector.exe /F</code> 並 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">reg delete HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v NFCToolConnector /f</code></li>
+                <li>啟用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v NFCToolConnector /d "\"%ProgramFiles%\Web NFC Bridge Connector\nfc-connector.exe\" --watchdog"</code></li>
               </ul>
             </div>
             <div>
