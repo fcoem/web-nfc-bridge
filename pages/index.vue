@@ -326,11 +326,11 @@ async function handleWriteCard() {
           <div class="space-y-1">
             <p class="font-semibold text-amber-900">Connector 未連線</p>
             <p class="text-amber-800">
-              請先安裝 Connector v{{ connectorVersion }}，安裝完成後重新整理此頁面。
+              請先安裝 Connector<template v-if="connectorVersion"> v{{ connectorVersion }}</template>，安裝完成後重新整理此頁面。
             </p>
           </div>
           <ClientOnly>
-            <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <div v-if="recommendedDownload" class="flex flex-wrap items-center gap-3 shrink-0">
               <UButton
                 :to="recommendedDownload.url"
                 target="_blank"

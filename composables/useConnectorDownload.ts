@@ -50,29 +50,30 @@ export function useConnectorDownload() {
   const platform = useState<PlatformKey>("detected-platform", () => "unknown");
 
   const repo = config.public.connectorRepo as string;
-  const fallbackVersion = config.public.connectorVersion as string;
 
   const { data: latestData } = useAsyncData("connector-latest-version", () =>
-    $fetch<{ version: string }>("/api/connector-latest").catch(() => ({ version: fallbackVersion })),
+    $fetch<{ version: string }>("/api/connector-latest"),
   );
 
   onMounted(async () => {
     platform.value = await detectPlatform();
   });
 
-  const resolvedVersion = computed(() => latestData.value?.version ?? fallbackVersion);
+  const version = computed(() => latestData.value?.version ?? null);
 
-  const allDownloads = computed<DownloadEntry[]>(() =>
-    buildDownloads(resolvedVersion.value, repo),
+  const allDownloads = computed<DownloadEntry[]>(() => {
+    if (!version.value) return [];
+    return buildDownloads(version.value, repo);
+  });
+
+  const recommended = computed<DownloadEntry | null>(() =>
+    allDownloads.value.find((d) => d.platformKey === platform.value) ?? allDownloads.value[0] ?? null,
   );
 
-  const recommended = computed<DownloadEntry>(() =>
-    allDownloads.value.find((d) => d.platformKey === platform.value) ?? allDownloads.value[0]!,
-  );
+  const others = computed(() => {
+    if (!recommended.value) return [];
+    return allDownloads.value.filter((d) => d.platformKey !== recommended.value!.platformKey);
+  });
 
-  const others = computed(() =>
-    allDownloads.value.filter((d) => d.platformKey !== recommended.value!.platformKey),
-  );
-
-  return { platform, recommended, others, allDownloads, version: resolvedVersion };
+  return { platform, recommended, others, allDownloads, version };
 }
