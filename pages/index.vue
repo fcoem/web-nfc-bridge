@@ -301,13 +301,13 @@ async function handleWriteCard() {
       <section class="erp-panel rounded-2xl border border-slate-200/80 p-6 lg:p-8">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div class="space-y-3">
-            <p class="eyebrow text-xs text-sky-700">ERP NFC Demo</p>
+            <p class="eyebrow text-xs text-sky-700">NFC 讀寫器 Demo</p>
             <h1 class="max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               點一下，再靠卡。
             </h1>
             <p class="max-w-2xl text-base leading-7 text-slate-600">
               這個 Demo 只保留最少流程：讀取 UID、讀取 JSON、寫入
-              JSON。讀卡與寫卡都改成先按按鈕，再把卡片靠上讀卡機。
+              JSON。<br>讀卡與寫卡都改成先按按鈕，再把卡片靠上讀卡機。
             </p>
           </div>
 
@@ -379,7 +379,7 @@ async function handleWriteCard() {
 
           <div class="space-y-4 text-sm text-slate-700">
             <p class="leading-6 text-slate-600">
-              操作方式：先按「開始讀取」，再把卡片貼上讀卡機。系統會等待 15 秒。
+              操作方式：先按「開始讀取」，再把卡片貼上讀卡機。<br>系統會等待 15 秒。
             </p>
 
             <div class="grid gap-3 sm:grid-cols-2">
