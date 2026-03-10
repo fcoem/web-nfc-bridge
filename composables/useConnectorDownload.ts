@@ -48,23 +48,19 @@ function buildDownloads(version: string, repo: string): DownloadEntry[] {
 export function useConnectorDownload() {
   const config = useRuntimeConfig();
   const platform = useState<PlatformKey>("detected-platform", () => "unknown");
-  const version = useState<string | null>("connector-latest-version", () => null);
 
   const repo = config.public.connectorRepo as string;
   const fallbackVersion = config.public.connectorVersion as string;
 
+  const { data: latestData } = useAsyncData("connector-latest-version", () =>
+    $fetch<{ version: string }>("/api/connector-latest").catch(() => ({ version: fallbackVersion })),
+  );
+
   onMounted(async () => {
     platform.value = await detectPlatform();
-
-    try {
-      const { version: latest } = await $fetch<{ version: string }>("/api/connector-latest");
-      version.value = latest;
-    } catch {
-      version.value = fallbackVersion;
-    }
   });
 
-  const resolvedVersion = computed(() => version.value ?? fallbackVersion);
+  const resolvedVersion = computed(() => latestData.value?.version ?? fallbackVersion);
 
   const allDownloads = computed<DownloadEntry[]>(() =>
     buildDownloads(resolvedVersion.value, repo),
