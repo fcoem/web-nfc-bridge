@@ -5,16 +5,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
-	"nfc-tool/connector/internal/api"
-	"nfc-tool/connector/internal/bridge"
+	"web-nfc-bridge/connector/internal/api"
+	"web-nfc-bridge/connector/internal/bridge"
 )
 
 var version = "dev"
 var buildTime = "unknown"
 
-const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev,https://nfc-tool.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
+const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
 
 func main() {
 	addr := getenv("NFC_CONNECTOR_ADDR", "127.0.0.1:42619")
@@ -47,8 +50,20 @@ func main() {
 	service := bridge.NewService(driver)
 	server := api.NewServer(service, allowedOrigins, secret, version, buildTime)
 
+	httpServer := &http.Server{Addr: addr, Handler: server.Handler()}
+
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		sig := <-sigCh
+		log.Printf("received %s, shutting down", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = httpServer.Shutdown(ctx)
+	}()
+
 	log.Printf("nfc connector listening on http://%s (driver=%s version=%s buildTime=%s)", addr, service.DriverName(), version, buildTime)
-	if err := http.ListenAndServe(addr, server.Handler()); err != nil {
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 }

@@ -66,7 +66,7 @@ gh secret set NUXT_CONNECTOR_SHARED_SECRET
 設定 variables：
 
 ```bash
-gh variable set CLOUDFLARE_WORKER_NAME --body "nfc-tool"
+gh variable set CLOUDFLARE_WORKER_NAME --body "web-nfc-bridge"
 gh variable set NUXT_PUBLIC_CONNECTOR_BASE_URL --body "http://127.0.0.1:42619"
 gh variable set NUXT_PUBLIC_SITE_ORIGIN --body "https://nfc.yudefine.com.tw"
 ```
@@ -79,8 +79,8 @@ gh variable set NUXT_PUBLIC_SITE_ORIGIN --body "https://nfc.yudefine.com.tw"
 gh workflow run deploy-cloudflare.yml \
   --ref your-branch \
   -f ref=your-branch \
-  -f worker_name=nfc-tool-preview \
-  -f site_origin=https://nfc-tool-preview.workers.dev
+  -f worker_name=web-nfc-bridge-preview \
+  -f site_origin=https://web-nfc-bridge-preview.workers.dev
 ```
 
 查看執行狀態：
@@ -104,7 +104,7 @@ gh run watch
 如果前端已部署到 Cloudflare Workers 或自訂網域，本機 Connector 的 `NFC_CONNECTOR_ALLOWED_ORIGINS` 不能只留 localhost。至少要包含部署站台 origin，例如：
 
 ```text
-http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://nfc-tool.abcd854884.workers.dev,https://nfc.yudefine.com.tw
+http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://nfc.yudefine.com.tw
 ```
 
 目前新產生的安裝器預設值已包含上述 Workers URL 與自訂網域；已安裝的舊版 Connector 仍需要手動更新環境變數後重啟。

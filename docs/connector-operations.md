@@ -18,20 +18,20 @@
 
 ## Ubuntu `.deb` Behavior
 
-- 安裝路徑：`/usr/local/libexec/nfc-tool/nfc-connector`
-- 命令包裝：`/usr/local/bin/nfc-tool-connector`
-- systemd unit：`/lib/systemd/system/nfc-tool-connector.service`
-- 預設環境檔：`/etc/default/nfc-tool-connector`
+- 安裝路徑：`/usr/local/libexec/web-nfc-bridge/nfc-connector`
+- 命令包裝：`/usr/local/bin/web-nfc-bridge-connector`
+- systemd unit：`/lib/systemd/system/web-nfc-bridge-connector.service`
+- 預設環境檔：`/etc/default/web-nfc-bridge-connector`
 - `postinst` 會執行 `systemctl daemon-reload`、`enable` 與 `start/restart`
 - `prerm` 會在移除前停止並停用 service
 - `postrm` 會在移除後執行 `daemon-reload` 與 `reset-failed`
 
 ## macOS Upgrade Safety
 
-- macOS pkg install 前會先執行 `preinstall`，卸載既有 `com.nfc-tool.connector` agent
-- `preinstall` 會移除 `/usr/local/libexec/nfc-tool/nfc-connector`
-- `preinstall` 會移除 `/usr/local/bin/nfc-tool-connector`
-- `preinstall` 會移除 `/Library/LaunchAgents/com.nfc-tool.connector.plist`
+- macOS pkg install 前會先執行 `preinstall`，卸載既有 `com.web-nfc-bridge.connector` agent
+- `preinstall` 會移除 `/usr/local/libexec/web-nfc-bridge/nfc-connector`
+- `preinstall` 會移除 `/usr/local/bin/web-nfc-bridge-connector`
+- `preinstall` 會移除 `/Library/LaunchAgents/com.web-nfc-bridge.connector.plist`
 - 安裝完成後再由 `postinstall` 重新 bootstrap 新版 agent
 - 這代表同一路徑上的舊 binary 與舊 plist 不會在升級後殘留
 
@@ -50,7 +50,7 @@
 - 確認 Connector process 已啟動
 - 確認 `NFC_CONNECTOR_ALLOWED_ORIGINS` 包含網站 origin
 - 開發模式可使用 `http://localhost:*`、`https://localhost:*`、`http://127.0.0.1:*` 這類 wildcard 規則允許本機不同 port
-- 若 Web console 部署在 Cloudflare Workers 或自訂網域，allowlist 也要包含正式站台 origin，例如 `https://nfc-tool.abcd854884.workers.dev` 或 `https://nfc.yudefine.com.tw`
+- 若 Web console 部署在 Cloudflare Workers 或自訂網域，allowlist 也要包含正式站台 origin，例如 `https://web-nfc-bridge.abcd854884.workers.dev` 或 `https://nfc.yudefine.com.tw`
 
 ### Reader missing
 
@@ -75,8 +75,8 @@
 ### Write rejected
 
 - 確認請求使用 `ndef-v1` profile，而不是舊的 `demo-note` payload
-- 確認 payload type 為 `nfc-tool/demo` 或 `nfc-tool/ref`
-- `nfc-tool/ref` 必須帶 `token`，`nfc-tool/demo` 只允許小型 demo 欄位
+- 確認 payload type 為 `web-nfc-bridge/demo` 或 `web-nfc-bridge/ref`
+- `web-nfc-bridge/ref` 必須帶 `token`，`web-nfc-bridge/demo` 只允許小型 demo 欄位
 - 若錯誤訊息提到 safe limit，請縮小 JSON payload 到 `256` bytes 以內
 - 若錯誤訊息提到 `card is not NDEF formatted`，代表目前卡片不在 v1 支援範圍內
 - 若錯誤訊息提到 `card is NDEF read-only`，代表卡片 Capability Container 指出目前不可寫

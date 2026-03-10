@@ -2,7 +2,7 @@
 
 - [x] 1.1 Document Decision 1: Support NDEF-compatible tags first in product docs and Connector write policy notes
 - [x] 1.2 Define the NDEF v1 write target capability in implementation-facing docs and validation logic
-- [x] 1.3 Define Decision 2: Carry a compact application/json payload inside NDEF and implement the NDEF application/json payload schema for `nfc-tool/demo` and `nfc-tool/ref`
+- [x] 1.3 Define Decision 2: Carry a compact application/json payload inside NDEF and implement the NDEF application/json payload schema for `web-nfc-bridge/demo` and `web-nfc-bridge/ref`
 
 ## 2. Safe Write Policy
 

@@ -35,7 +35,7 @@ Decision 6: Windows on ARM 驅動驗證列為先行風險排除工作。
 ## Latest Validation Snapshot
 
 - macOS 2026-03-09：`ACS ACR1252 Dual Reader PICC` 可成功建立 session 並讀得 UID `0472650DCC2A81` 與 ATR `3B8F8001804F0CA0000003060300030000000068`
-- macOS 2026-03-09：`/card/write` 以 `ndef-v1` demo payload 對真卡回傳 `accepted: true`，Connector details 包含 `driver=pcsc`、`profile=ndef-write-profile/v1`、`payloadType=nfc-tool/demo`、`pagesWritten=30`
+- macOS 2026-03-09：`/card/write` 以 `ndef-v1` demo payload 對真卡回傳 `accepted: true`，Connector details 包含 `driver=pcsc`、`profile=ndef-write-profile/v1`、`payloadType=web-nfc-bridge/demo`、`pagesWritten=30`
 - macOS 2026-03-09：實體讀回 page 4 起的資料可見 Type 2 TLV 與 NDEF MIME record 前綴：`03 74 D2 10 61 61 70 70 6C 69 63 61 74 69 6F 6E ...`，代表卡片已寫入 `application/json` payload
 
 ## Browser Policy

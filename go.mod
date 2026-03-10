@@ -1,4 +1,4 @@
-module nfc-tool
+module web-nfc-bridge
 
 go 1.26.0
 

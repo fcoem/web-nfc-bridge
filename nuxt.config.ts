@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     connectorSharedSecret: "development-shared-secret",
     public: {
-      appName: "NFC Bridge Console",
+      appName: "Web NFC Bridge",
       connectorBaseUrl: "http://127.0.0.1:42619",
       siteOrigin: "http://localhost:3000",
     },
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: "NFC Bridge Console",
+      title: "Web NFC Bridge",
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },

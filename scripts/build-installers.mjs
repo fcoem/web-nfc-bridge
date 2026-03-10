@@ -55,8 +55,8 @@ const defaultAllowedOrigins = [
   "https://localhost:*",
   "http://127.0.0.1:*",
   "https://127.0.0.1:*",
-  "https://nfc-tool.abcd854884.workers.dev",
-  "https://nfc-tool.abcd854884.workers.dev.",
+  "https://web-nfc-bridge.abcd854884.workers.dev",
+  "https://web-nfc-bridge.abcd854884.workers.dev.",
   "https://nfc.yudefine.com.tw",
   "https://nfc.yudefine.com.tw.",
 ].join(",");
@@ -390,10 +390,10 @@ function buildMacOS(version, outputDir) {
 
   ensureTool("pkgbuild", "pkgbuild is required to build the macOS installer");
 
-  const workDir = mkdtempSync(join(tmpdir(), "nfc-tool-macos-"));
+  const workDir = mkdtempSync(join(tmpdir(), "web-nfc-bridge-macos-"));
   const pkgRoot = join(workDir, "root");
   const scriptsDir = join(workDir, "scripts");
-  const binaryDir = join(pkgRoot, "usr", "local", "libexec", "nfc-tool");
+  const binaryDir = join(pkgRoot, "usr", "local", "libexec", "web-nfc-bridge");
   const wrapperDir = join(pkgRoot, "usr", "local", "bin");
   const launchAgentsDir = join(pkgRoot, "Library", "LaunchAgents");
   ensureDir(binaryDir);
@@ -410,14 +410,14 @@ function buildMacOS(version, outputDir) {
     CGO_ENABLED: "1",
   });
 
-  const wrapperPath = join(wrapperDir, "nfc-tool-connector");
+  const wrapperPath = join(wrapperDir, "web-nfc-bridge-connector");
   writeFileSync(
     wrapperPath,
-    '#!/bin/sh\nexec /usr/local/libexec/nfc-tool/nfc-connector "$@"\n',
+    '#!/bin/sh\nexec /usr/local/libexec/web-nfc-bridge/nfc-connector "$@"\n',
   );
   chmodSync(wrapperPath, 0o755);
 
-  const plistPath = join(launchAgentsDir, "com.nfc-tool.connector.plist");
+  const plistPath = join(launchAgentsDir, "com.web-nfc-bridge.connector.plist");
   writeFileSync(
     plistPath,
     `<?xml version="1.0" encoding="UTF-8"?>
@@ -425,10 +425,10 @@ function buildMacOS(version, outputDir) {
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.nfc-tool.connector</string>
+    <string>com.web-nfc-bridge.connector</string>
     <key>ProgramArguments</key>
     <array>
-      <string>/usr/local/libexec/nfc-tool/nfc-connector</string>
+      <string>/usr/local/libexec/web-nfc-bridge/nfc-connector</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -446,9 +446,9 @@ function buildMacOS(version, outputDir) {
       <string>development-shared-secret</string>
     </dict>
     <key>StandardOutPath</key>
-    <string>/tmp/nfc-tool-connector.log</string>
+    <string>/tmp/web-nfc-bridge-connector.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/nfc-tool-connector.error.log</string>
+    <string>/tmp/web-nfc-bridge-connector.error.log</string>
   </dict>
 </plist>
 `,
@@ -457,14 +457,14 @@ function buildMacOS(version, outputDir) {
   const preinstallPath = join(scriptsDir, "preinstall");
   writeFileSync(
     preinstallPath,
-    '#!/bin/sh\nset -eu\nplist=/Library/LaunchAgents/com.nfc-tool.connector.plist\nbinary=/usr/local/libexec/nfc-tool/nfc-connector\nwrapper=/usr/local/bin/nfc-tool-connector\ncurrent_user=$(stat -f %Su /dev/console || true)\nif [ -n "$current_user" ] && [ "$current_user" != "root" ]; then\n  uid=$(id -u "$current_user")\n  launchctl bootout "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl remove "gui/$uid/com.nfc-tool.connector" >/dev/null 2>&1 || true\nfi\nrm -f "$wrapper"\nrm -f "$binary"\nrm -f "$plist"\nrmdir /usr/local/libexec/nfc-tool >/dev/null 2>&1 || true\nexit 0\n',
+    '#!/bin/sh\nset -eu\nplist=/Library/LaunchAgents/com.web-nfc-bridge.connector.plist\nbinary=/usr/local/libexec/web-nfc-bridge/nfc-connector\nwrapper=/usr/local/bin/web-nfc-bridge-connector\ncurrent_user=$(stat -f %Su /dev/console || true)\nif [ -n "$current_user" ] && [ "$current_user" != "root" ]; then\n  uid=$(id -u "$current_user")\n  launchctl bootout "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl remove "gui/$uid/com.web-nfc-bridge.connector" >/dev/null 2>&1 || true\nfi\nrm -f "$wrapper"\nrm -f "$binary"\nrm -f "$plist"\nrmdir /usr/local/libexec/web-nfc-bridge >/dev/null 2>&1 || true\nexit 0\n',
   );
   chmodSync(preinstallPath, 0o755);
 
   const postinstallPath = join(scriptsDir, "postinstall");
   writeFileSync(
     postinstallPath,
-    '#!/bin/sh\nset -eu\ncurrent_user=$(stat -f %Su /dev/console || true)\nif [ -n "$current_user" ] && [ "$current_user" != "root" ]; then\n  uid=$(id -u "$current_user")\n  plist=/Library/LaunchAgents/com.nfc-tool.connector.plist\n  launchctl bootout "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl bootstrap "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl kickstart -k "gui/$uid/com.nfc-tool.connector" >/dev/null 2>&1 || true\nfi\nexit 0\n',
+    '#!/bin/sh\nset -eu\ncurrent_user=$(stat -f %Su /dev/console || true)\nif [ -n "$current_user" ] && [ "$current_user" != "root" ]; then\n  uid=$(id -u "$current_user")\n  plist=/Library/LaunchAgents/com.web-nfc-bridge.connector.plist\n  launchctl bootout "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl bootstrap "gui/$uid" "$plist" >/dev/null 2>&1 || true\n  launchctl kickstart -k "gui/$uid/com.web-nfc-bridge.connector" >/dev/null 2>&1 || true\nfi\nexit 0\n',
   );
   chmodSync(postinstallPath, 0o755);
 
@@ -475,7 +475,7 @@ function buildMacOS(version, outputDir) {
     "--scripts",
     scriptsDir,
     "--identifier",
-    "com.nfc-tool.connector",
+    "com.web-nfc-bridge.connector",
     "--version",
     version,
     outputPath,
@@ -497,7 +497,7 @@ function buildWindows(version, outputDir, arch) {
     "wix CLI is required to build the Windows MSI. Install it with: dotnet tool install --global wix",
   );
 
-  const workDir = mkdtempSync(join(tmpdir(), `nfc-tool-windows-${arch}-`));
+  const workDir = mkdtempSync(join(tmpdir(), `web-nfc-bridge-windows-${arch}-`));
   const binaryPath = join(workDir, "nfc-connector.exe");
   buildGoBinary(binaryPath, {
     BUILD_VERSION: version,
@@ -515,12 +515,12 @@ function buildWindows(version, outputDir, arch) {
     wixSource,
     `<?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="NFC Tool Connector" Manufacturer="NFC Tool" Version="${version}" UpgradeCode="${upgradeCode}">
+  <Package Name="Web NFC Bridge Connector" Manufacturer="Web NFC Bridge" Version="${version}" UpgradeCode="${upgradeCode}">
     <MediaTemplate EmbedCab="yes" />
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="NFC Tool Connector" />
+      <Directory Id="INSTALLFOLDER" Name="Web NFC Bridge Connector" />
     </StandardDirectory>
-    <Feature Id="MainFeature" Title="NFC Tool Connector" Level="1">
+    <Feature Id="MainFeature" Title="Web NFC Bridge Connector" Level="1">
       <ComponentGroupRef Id="ConnectorFiles" />
     </Feature>
   </Package>
@@ -551,10 +551,10 @@ function buildWindows(version, outputDir, arch) {
 }
 
 function buildLinux(version, outputDir) {
-  const workDir = mkdtempSync(join(tmpdir(), "nfc-tool-linux-deb-"));
+  const workDir = mkdtempSync(join(tmpdir(), "web-nfc-bridge-linux-deb-"));
   const dataRoot = join(workDir, "data");
   const controlRoot = join(workDir, "control");
-  const binaryDir = join(dataRoot, "usr", "local", "libexec", "nfc-tool");
+  const binaryDir = join(dataRoot, "usr", "local", "libexec", "web-nfc-bridge");
   const wrapperDir = join(dataRoot, "usr", "local", "bin");
   const configDir = join(dataRoot, "etc", "default");
   const systemdDir = join(dataRoot, "lib", "systemd", "system");
@@ -574,13 +574,13 @@ function buildLinux(version, outputDir) {
   });
 
   writeFileSync(
-    join(wrapperDir, "nfc-tool-connector"),
-    '#!/bin/sh\nexec /usr/local/libexec/nfc-tool/nfc-connector "$@"\n',
+    join(wrapperDir, "web-nfc-bridge-connector"),
+    '#!/bin/sh\nexec /usr/local/libexec/web-nfc-bridge/nfc-connector "$@"\n',
   );
-  chmodSync(join(wrapperDir, "nfc-tool-connector"), 0o755);
+  chmodSync(join(wrapperDir, "web-nfc-bridge-connector"), 0o755);
 
   writeFileSync(
-    join(configDir, "nfc-tool-connector"),
+    join(configDir, "web-nfc-bridge-connector"),
     [
       'NFC_CONNECTOR_ADDR="127.0.0.1:42619"',
       'NFC_CONNECTOR_DRIVER="pcsc"',
@@ -590,17 +590,17 @@ function buildLinux(version, outputDir) {
   );
 
   writeFileSync(
-    join(systemdDir, "nfc-tool-connector.service"),
+    join(systemdDir, "web-nfc-bridge-connector.service"),
     [
       "[Unit]",
-      "Description=NFC Tool Connector",
+      "Description=Web NFC Bridge Connector",
       "After=network.target pcscd.service",
       "Wants=network.target",
       "",
       "[Service]",
       "Type=simple",
-      "EnvironmentFile=-/etc/default/nfc-tool-connector",
-      "ExecStart=/usr/local/libexec/nfc-tool/nfc-connector",
+      "EnvironmentFile=-/etc/default/web-nfc-bridge-connector",
+      "ExecStart=/usr/local/libexec/web-nfc-bridge/nfc-connector",
       "Restart=always",
       "RestartSec=3",
       "",
@@ -612,15 +612,15 @@ function buildLinux(version, outputDir) {
   writeFileSync(
     join(controlRoot, "control"),
     [
-      "Package: nfc-tool-connector",
+      "Package: web-nfc-bridge-connector",
       `Version: ${version}`,
       "Section: utils",
       "Priority: optional",
       "Architecture: amd64",
-      "Maintainer: NFC Tool <support@nfc-tool.local>",
+      "Maintainer: Web NFC Bridge <support@web-nfc-bridge.local>",
       "Depends: libc6",
-      "Description: NFC Tool localhost connector",
-      " Connector service for the NFC Tool web app.",
+      "Description: Web NFC Bridge localhost connector",
+      " Connector service for the Web NFC Bridge web app.",
     ].join("\n") + "\n",
   );
 
@@ -631,8 +631,8 @@ function buildLinux(version, outputDir) {
       "set -eu",
       "if command -v systemctl >/dev/null 2>&1; then",
       "  systemctl daemon-reload >/dev/null 2>&1 || true",
-      "  systemctl enable nfc-tool-connector.service >/dev/null 2>&1 || true",
-      "  systemctl restart nfc-tool-connector.service >/dev/null 2>&1 || systemctl start nfc-tool-connector.service >/dev/null 2>&1 || true",
+      "  systemctl enable web-nfc-bridge-connector.service >/dev/null 2>&1 || true",
+      "  systemctl restart web-nfc-bridge-connector.service >/dev/null 2>&1 || systemctl start web-nfc-bridge-connector.service >/dev/null 2>&1 || true",
       "fi",
       "exit 0",
     ].join("\n") + "\n",
@@ -645,8 +645,8 @@ function buildLinux(version, outputDir) {
       "#!/bin/sh",
       "set -eu",
       "if command -v systemctl >/dev/null 2>&1; then",
-      "  systemctl stop nfc-tool-connector.service >/dev/null 2>&1 || true",
-      "  systemctl disable nfc-tool-connector.service >/dev/null 2>&1 || true",
+      "  systemctl stop web-nfc-bridge-connector.service >/dev/null 2>&1 || true",
+      "  systemctl disable web-nfc-bridge-connector.service >/dev/null 2>&1 || true",
       "fi",
       "exit 0",
     ].join("\n") + "\n",
@@ -660,7 +660,7 @@ function buildLinux(version, outputDir) {
       "set -eu",
       "if command -v systemctl >/dev/null 2>&1; then",
       "  systemctl daemon-reload >/dev/null 2>&1 || true",
-      "  systemctl reset-failed nfc-tool-connector.service >/dev/null 2>&1 || true",
+      "  systemctl reset-failed web-nfc-bridge-connector.service >/dev/null 2>&1 || true",
       "fi",
       "exit 0",
     ].join("\n") + "\n",

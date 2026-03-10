@@ -72,7 +72,7 @@
   "operation": "ndef-v1",
   "payload": {
     "version": 1,
-    "type": "nfc-tool/demo",
+    "type": "web-nfc-bridge/demo",
     "label": "MO-20260309-001",
     "content": {
       "documentNo": "MO-20260309-001",
@@ -88,17 +88,17 @@
 
 受支援 payload 類型：
 
-- `nfc-tool/demo`
-- `nfc-tool/ref`
+- `web-nfc-bridge/demo`
+- `web-nfc-bridge/ref`
 
 限制：
 
 - media type 固定為 `application/json`
 - v1 payload 大小上限為 `256` bytes
-- `nfc-tool/demo` 可選擇寫入 `label` 或 `content`
+- `web-nfc-bridge/demo` 可選擇寫入 `label` 或 `content`
 - `content` 必須是單層 JSON 物件，最多 `8` 個欄位，值只允許字串、數字、布林或 `null`
 - 不允許任意巢狀物件、陣列或敏感資料欄位
-- `nfc-tool/ref` 必須提供 `token`
+- `web-nfc-bridge/ref` 必須提供 `token`
 
 ## WebSocket Events
 
@@ -148,8 +148,8 @@
 
 - v1 寫卡 profile 固定為 `ndef-v1`
 - Connector 只接受 NDEF-compatible profile payload，不接受 raw block write
-- `nfc-tool/demo` 適合本地驗證與 UI smoke test
-- `nfc-tool/ref` 適合 production reference token，不應直接承載完整業務資料
+- `web-nfc-bridge/demo` 適合本地驗證與 UI smoke test
+- `web-nfc-bridge/ref` 適合 production reference token，不應直接承載完整業務資料
 - 驗證失敗時，Connector 會在嘗試寫卡前直接回傳 validation error
 - 在已支援的實體 driver 上，Connector 只有在完成卡片寫入並讀回驗證後，才會回傳 `accepted: true`
 - 目前已驗證的實體寫入路徑為 macOS `pcsc` driver 搭配 NDEF formatted Type 2 tag

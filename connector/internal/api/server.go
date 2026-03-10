@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"nfc-tool/connector/internal/auth"
-	"nfc-tool/connector/internal/bridge"
+	"web-nfc-bridge/connector/internal/auth"
+	"web-nfc-bridge/connector/internal/bridge"
 
 	"github.com/gorilla/websocket"
 )

@@ -61,7 +61,7 @@ export default defineEventHandler((event) => {
         defaultProfile: "ndef-v1",
         mediaType: "application/json",
         maxPayloadBytes: 256,
-        allowedTypes: ["nfc-tool/demo", "nfc-tool/ref"],
+        allowedTypes: ["web-nfc-bridge/demo", "web-nfc-bridge/ref"],
       },
     },
   };

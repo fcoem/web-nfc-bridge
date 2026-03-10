@@ -146,7 +146,6 @@ export function useConnectorStatus() {
     state.value = "checking";
 
     try {
-      const headers = await withConnectorHeaders("all");
       const healthResponse = await fetch(`${config.public.connectorBaseUrl}/health`, {
         method: "GET",
       });
@@ -167,9 +166,10 @@ export function useConnectorStatus() {
         driver: healthPayload.driver ?? null,
       };
 
+      const readersHeaders = await withConnectorHeaders("all");
       const readersResponse = await fetch(`${config.public.connectorBaseUrl}/readers`, {
         method: "GET",
-        headers,
+        headers: readersHeaders,
       });
 
       if (readersResponse.ok) {
@@ -344,7 +344,7 @@ export function useConnectorStatus() {
           operation: "ndef-v1",
           payload: {
             version: 1,
-            type: "nfc-tool/demo",
+            type: "web-nfc-bridge/demo",
             label: deriveDemoLabel(content),
             content,
             updatedAt: new Date().toISOString(),
@@ -397,7 +397,7 @@ export function useConnectorStatus() {
           mediaType: "application/json",
           payload: {
             version: 1,
-            type: "nfc-tool/demo",
+            type: "web-nfc-bridge/demo",
             label: deriveDemoLabel(content),
             content,
             updatedAt: new Date().toISOString(),

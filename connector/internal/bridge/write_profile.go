@@ -11,8 +11,8 @@ const (
 	NDEFWriteOperation   = "ndef-v1"
 	NDEFWriteProfile     = "ndef-write-profile/v1"
 	NDEFApplicationJSON  = "application/json"
-	NDEFDemoPayloadType  = "nfc-tool/demo"
-	NDEFRefPayloadType   = "nfc-tool/ref"
+	NDEFDemoPayloadType  = "web-nfc-bridge/demo"
+	NDEFRefPayloadType   = "web-nfc-bridge/ref"
 	NDEFMaxPayloadBytes  = 256
 	NDEFDemoMaxFields    = 8
 	NDEFDemoMaxKeyBytes  = 32

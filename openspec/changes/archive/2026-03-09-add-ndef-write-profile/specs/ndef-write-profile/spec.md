@@ -53,12 +53,12 @@ The system SHALL distinguish demo payloads from production reference payloads th
 
 #### Scenario: Demo payload is accepted
 
-- **WHEN** the payload uses `version: 1` and `type: nfc-tool/demo`
+- **WHEN** the payload uses `version: 1` and `type: web-nfc-bridge/demo`
 - **THEN** the Connector MUST treat the payload as a non-production demo payload
 - **AND** MUST validate it against the demo schema
 
 #### Scenario: Reference payload is accepted
 
-- **WHEN** the payload uses `version: 1` and `type: nfc-tool/ref`
+- **WHEN** the payload uses `version: 1` and `type: web-nfc-bridge/ref`
 - **THEN** the Connector MUST treat the payload as a production reference payload
 - **AND** MUST validate that the payload stores only the allowed reference fields for version 1

@@ -106,7 +106,7 @@ curl -s -X POST \
   -H 'Origin: http://localhost:3000' \
   -H "X-Bridge-Token: $WRITE_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d "{\"sessionId\":\"$SESSION_ID\",\"operation\":\"ndef-v1\",\"payload\":{\"version\":1,\"type\":\"nfc-tool/demo\",\"label\":\"Demo card label\",\"updatedAt\":\"2026-03-09T01:35:40Z\"}}" \
+  -d "{\"sessionId\":\"$SESSION_ID\",\"operation\":\"ndef-v1\",\"payload\":{\"version\":1,\"type\":\"web-nfc-bridge/demo\",\"label\":\"Demo card label\",\"updatedAt\":\"2026-03-09T01:35:40Z\"}}" \
   http://127.0.0.1:42619/card/write
 ```
 
@@ -263,7 +263,7 @@ Invoke-RestMethod -Method Post -Headers $writeHeaders -ContentType 'application/
   operation = 'ndef-v1'
   payload = @{
     version = 1
-    type = 'nfc-tool/demo'
+    type = 'web-nfc-bridge/demo'
     label = 'Windows ARM64 probe'
     updatedAt = '2026-03-09T01:35:40Z'
   }

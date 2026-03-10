@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"nfc-tool/connector/internal/bridge"
+	"web-nfc-bridge/connector/internal/bridge"
 )
 
 func TestHealthEchoesOriginalOriginWithTrailingDot(t *testing.T) {
