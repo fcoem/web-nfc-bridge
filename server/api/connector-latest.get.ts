@@ -1,20 +1,32 @@
-import { defineCachedEventHandler } from "nitropack/runtime";
+let cached: { version: string; fetchedAt: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-export default defineCachedEventHandler(
-  async (event) => {
-    const config = useRuntimeConfig(event);
-    const repo = config.public.connectorRepo as string;
+export default defineEventHandler(async (event) => {
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return { version: cached.version };
+  }
 
-    const release = await $fetch<{ tag_name: string }>(
-      `https://api.github.com/repos/${repo}/releases/latest`,
-      {
-        headers: { Accept: "application/vnd.github+json" },
+  const config = useRuntimeConfig(event);
+  const repo = config.public.connectorRepo as string;
+
+  const response = await fetch(
+    `https://api.github.com/repos/${repo}/releases/latest`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "web-nfc-bridge",
       },
-    );
+    },
+  );
 
-    const version = release.tag_name.replace(/^v/, "");
+  if (!response.ok) {
+    throw createError({ statusCode: 502, statusMessage: "Failed to fetch latest release" });
+  }
 
-    return { version };
-  },
-  { maxAge: 300, name: "connector-latest" },
-);
+  const release = (await response.json()) as { tag_name: string };
+  const version = release.tag_name.replace(/^v/, "");
+
+  cached = { version, fetchedAt: Date.now() };
+
+  return { version };
+});
