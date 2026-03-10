@@ -14,6 +14,8 @@ export default defineNuxtConfig({
       appName: "Web NFC Bridge",
       connectorBaseUrl: "http://127.0.0.1:42619",
       siteOrigin: "http://localhost:3000",
+      connectorVersion: "0.1.13",
+      connectorRepo: "YuDefine/web-nfc-bridge",
     },
   },
   ui: {

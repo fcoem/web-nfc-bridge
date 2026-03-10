@@ -30,6 +30,8 @@ const {
   writeJsonContent,
 } = useConnectorStatus();
 
+const { recommended: recommendedDownload, others: otherDownloads, version: connectorVersion } = useConnectorDownload();
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -263,7 +265,6 @@ async function handleReadCard() {
     await waitForCardPresence(async () => readCard({ suppressErrorState: true }));
     actionHint.value = "讀取完成。可以直接查看 UID 與 JSON。";
   } catch (error) {
-    console.error(error);
     actionError.value = error instanceof Error ? error.message : "讀卡失敗，請再試一次";
     actionHint.value = error instanceof Error ? error.message : "讀卡失敗，請再試一次";
   } finally {
@@ -285,7 +286,6 @@ async function handleWriteCard() {
     await waitForCardPresence(async () => writeJsonContent(content, { suppressErrorState: true }));
     actionHint.value = "寫入完成。若要確認內容，可再按一次讀取。";
   } catch (error) {
-    console.error(error);
     actionError.value = error instanceof Error ? error.message : "寫卡失敗，請再試一次";
     actionHint.value = error instanceof Error ? error.message : "寫卡失敗，請再試一次";
   } finally {
@@ -310,7 +310,39 @@ async function handleWriteCard() {
             </p>
           </div>
 
+          <div v-if="state === 'offline'" class="rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm space-y-3 max-w-sm">
+            <p class="font-semibold text-amber-900">Connector 未連線</p>
+            <p class="text-amber-800">
+              請先安裝 Connector v{{ connectorVersion }}，安裝完成後重新整理此頁面。
+            </p>
+            <ClientOnly>
+              <div class="space-y-2">
+                <UButton
+                  :to="recommendedDownload.url"
+                  target="_blank"
+                  color="primary"
+                  size="lg"
+                  block
+                  trailing-icon="i-lucide-download"
+                >
+                  下載 {{ recommendedDownload.label }}
+                </UButton>
+                <div class="flex flex-wrap gap-x-3 gap-y-1">
+                  <a
+                    v-for="dl in otherDownloads"
+                    :key="dl.platformKey"
+                    :href="dl.url"
+                    target="_blank"
+                    class="text-xs text-sky-700 underline underline-offset-2 hover:text-sky-900"
+                  >
+                    {{ dl.label }}
+                  </a>
+                </div>
+              </div>
+            </ClientOnly>
+          </div>
           <div
+            v-else
             class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600"
           >
             <p><strong>狀態</strong>：{{ compactStatus }}</p>
