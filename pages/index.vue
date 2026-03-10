@@ -310,45 +310,47 @@ async function handleWriteCard() {
             </p>
           </div>
 
-          <div v-if="state === 'offline'" class="rounded-xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm space-y-3 max-w-sm">
-            <p class="font-semibold text-amber-900">Connector 未連線</p>
-            <p class="text-amber-800">
-              請先安裝 Connector v{{ connectorVersion }}，安裝完成後重新整理此頁面。
-            </p>
-            <ClientOnly>
-              <div class="space-y-2">
-                <UButton
-                  :to="recommendedDownload.url"
-                  target="_blank"
-                  color="primary"
-                  size="lg"
-                  block
-                  trailing-icon="i-lucide-download"
-                >
-                  下載 {{ recommendedDownload.label }}
-                </UButton>
-                <div class="flex flex-wrap gap-x-3 gap-y-1">
-                  <a
-                    v-for="dl in otherDownloads"
-                    :key="dl.platformKey"
-                    :href="dl.url"
-                    target="_blank"
-                    class="text-xs text-sky-700 underline underline-offset-2 hover:text-sky-900"
-                  >
-                    {{ dl.label }}
-                  </a>
-                </div>
-              </div>
-            </ClientOnly>
-          </div>
           <div
-            v-else
+            v-if="state === 'online'"
             class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600"
           >
             <p><strong>狀態</strong>：{{ compactStatus }}</p>
             <p><strong>Reader</strong>：{{ readerSummary.primaryName ?? "尚未選定" }}</p>
             <p><strong>Driver</strong>：{{ connectorMeta.driver ?? "n/a" }}</p>
           </div>
+        </div>
+      </section>
+
+      <section v-if="state === 'offline'" class="rounded-2xl border border-amber-200 bg-amber-50/80 px-5 py-4 text-sm">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="space-y-1">
+            <p class="font-semibold text-amber-900">Connector 未連線</p>
+            <p class="text-amber-800">
+              請先安裝 Connector v{{ connectorVersion }}，安裝完成後重新整理此頁面。
+            </p>
+          </div>
+          <ClientOnly>
+            <div class="flex flex-wrap items-center gap-3 shrink-0">
+              <UButton
+                :to="recommendedDownload.url"
+                target="_blank"
+                color="primary"
+                size="md"
+                trailing-icon="i-lucide-download"
+              >
+                下載 {{ recommendedDownload.label }}
+              </UButton>
+              <a
+                v-for="dl in otherDownloads"
+                :key="dl.platformKey"
+                :href="dl.url"
+                target="_blank"
+                class="text-xs text-sky-700 underline underline-offset-2 hover:text-sky-900"
+              >
+                {{ dl.label }}
+              </a>
+            </div>
+          </ClientOnly>
         </div>
       </section>
 

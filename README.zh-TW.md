@@ -159,9 +159,21 @@ Base URL：`http://127.0.0.1:42619`
 | 平台 | 架構 | 驅動 | 狀態 |
 |------|------|------|------|
 | macOS | Apple Silicon / Intel | PC/SC | 已驗證 |
+| Windows | x64 | PC/SC | 已驗證 |
 | Windows | ARM64 | Direct IOCTL | 已驗證 |
-| Windows | x64 | PC/SC | 支援 |
-| Linux | x64 | PC/SC | 支援 |
+| Linux | x64 | PC/SC | 已驗證 |
+
+### 測試環境
+
+| 平台 | 裝置 | 作業系統版本 |
+|------|------|------------|
+| macOS | Mac mini M4 | macOS Tahoe 26.3.1 |
+| Windows x64 | Intel NUC | Windows 11 25H2 |
+| Windows ARM64 | ASUS Zenbook A14 (Snapdragon X - X126100) | Windows 11 ARM 25H2 |
+| Linux x64 | — | Ubuntu Server 24.04 |
+
+- **讀卡機**：ACS ACR1252U-M1
+- **卡片**：NTAG 216（NFC Type 2）
 
 ## 專案結構
 

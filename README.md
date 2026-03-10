@@ -159,9 +159,21 @@ Constraints:
 | Platform | Architecture | Driver | Status |
 |----------|-------------|--------|--------|
 | macOS | Apple Silicon / Intel | PC/SC | Validated |
+| Windows | x64 | PC/SC | Validated |
 | Windows | ARM64 | Direct IOCTL | Validated |
-| Windows | x64 | PC/SC | Supported |
-| Linux | x64 | PC/SC | Supported |
+| Linux | x64 | PC/SC | Validated |
+
+### Tested Environment
+
+| Platform | Device | OS Version |
+|----------|--------|------------|
+| macOS | Mac mini M4 | macOS Tahoe 26.3.1 |
+| Windows x64 | Intel NUC | Windows 11 25H2 |
+| Windows ARM64 | ASUS Zenbook A14 (Snapdragon X - X126100) | Windows 11 ARM 25H2 |
+| Linux x64 | — | Ubuntu Server 24.04 |
+
+- **Reader**: ACS ACR1252U-M1
+- **Card**: NTAG 216 (NFC Type 2)
 
 ## Project Structure
 
