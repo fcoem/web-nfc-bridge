@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -24,19 +25,36 @@ type PCSCDriver struct {
 }
 
 func NewPCSCDriver() (*PCSCDriver, error) {
-	ctx, err := scard.EstablishContext()
-	if err != nil {
-		return nil, err
-	}
-
 	driver := &PCSCDriver{
-		ctx:    ctx,
 		events: make(chan Event, 32),
 		stop:   make(chan struct{}),
 	}
 
+	ctx, err := scard.EstablishContext()
+	if err != nil {
+		log.Printf("pcsc: initial context unavailable, will retry in background: %v", err)
+	} else {
+		driver.ctx = ctx
+	}
+
 	go driver.monitor()
 	return driver, nil
+}
+
+func (d *PCSCDriver) ensureContextLocked() error {
+	if d.ctx != nil {
+		if valid, err := d.ctx.IsValid(); err == nil && valid {
+			return nil
+		}
+		_ = d.ctx.Release()
+		d.ctx = nil
+	}
+	ctx, err := scard.EstablishContext()
+	if err != nil {
+		return err
+	}
+	d.ctx = ctx
+	return nil
 }
 
 func (d *PCSCDriver) DriverName() string {
@@ -47,10 +65,11 @@ func (d *PCSCDriver) Health(context.Context) map[string]any {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 
-	valid, err := d.ctx.IsValid()
-	status := "ok"
-	if err != nil || !valid {
-		status = "degraded"
+	status := "degraded"
+	if d.ctx != nil {
+		if valid, err := d.ctx.IsValid(); err == nil && valid {
+			status = "ok"
+		}
 	}
 	return map[string]any{
 		"status": status,
@@ -65,6 +84,9 @@ func (d *PCSCDriver) ListReaders(context.Context) ([]Reader, error) {
 }
 
 func (d *PCSCDriver) listReadersLocked() ([]Reader, error) {
+	if err := d.ensureContextLocked(); err != nil {
+		return []Reader{}, nil
+	}
 	readers, err := d.ctx.ListReaders()
 	if err != nil {
 		if errors.Is(err, scard.ErrNoReadersAvailable) {
@@ -87,6 +109,10 @@ func (d *PCSCDriver) listReadersLocked() ([]Reader, error) {
 func (d *PCSCDriver) ConnectSession(_ context.Context, readerName string) (*Session, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
+
+	if err := d.ensureContextLocked(); err != nil {
+		return nil, fmt.Errorf("smart card service unavailable: %w", err)
+	}
 
 	resolvedReader, err := d.resolveReaderLocked(readerName)
 	if err != nil {
@@ -115,6 +141,9 @@ func (d *PCSCDriver) ConnectSession(_ context.Context, readerName string) (*Sess
 func (d *PCSCDriver) ReadCard(_ context.Context, session *Session, operation string) (*CardReadResult, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
+	if err := d.ensureContextLocked(); err != nil {
+		return nil, fmt.Errorf("smart card service unavailable: %w", err)
+	}
 	if err := d.ensureCardPresentLocked(session.ReaderName); err != nil {
 		return nil, err
 	}
@@ -200,6 +229,9 @@ func (d *PCSCDriver) ReadCard(_ context.Context, session *Session, operation str
 func (d *PCSCDriver) WriteCard(_ context.Context, session *Session, request *WriteRequest) (*CardWriteResult, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
+	if err := d.ensureContextLocked(); err != nil {
+		return nil, fmt.Errorf("smart card service unavailable: %w", err)
+	}
 	if err := d.ensureCardPresentLocked(session.ReaderName); err != nil {
 		return nil, err
 	}
@@ -341,6 +373,8 @@ func (d *PCSCDriver) Events() <-chan Event {
 
 func (d *PCSCDriver) Close() error {
 	close(d.stop)
+	d.opMu.Lock()
+	defer d.opMu.Unlock()
 	if d.ctx != nil {
 		return d.ctx.Release()
 	}
@@ -357,6 +391,9 @@ func (d *PCSCDriver) monitor() {
 				continue
 			}
 
+			if d.ctx == nil {
+				_ = d.ensureContextLocked()
+			}
 			readers, err := d.listReadersLocked()
 			d.opMu.Unlock()
 			if err != nil {
