@@ -529,6 +529,9 @@ function buildWindows(version, outputDir, arch) {
       <Component Guid="*">
         <File Source="${binaryPath.replace(/\\/g, "/")}" KeyPath="yes" />
       </Component>
+      <Component Id="AutoStart" Guid="*">
+        <RegistryValue Root="HKMU" Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run" Name="NFCToolConnector" Type="string" Value="[INSTALLFOLDER]nfc-connector.exe" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
   </Fragment>
 </Wix>
@@ -567,6 +570,7 @@ function buildLinux(version, outputDir) {
     BUILD_TIME: new Date().toISOString(),
     GOOS: "linux",
     GOARCH: "amd64",
+    CGO_ENABLED: "1",
   });
 
   writeFileSync(

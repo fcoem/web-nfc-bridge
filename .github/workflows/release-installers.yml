@@ -47,6 +47,10 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install PC/SC development headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libpcsclite-dev
+
       - name: Install WiX
         if: runner.os == 'Windows'
         shell: pwsh

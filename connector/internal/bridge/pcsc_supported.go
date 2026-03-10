@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build darwin || windows || linux
 
 package bridge
 
@@ -14,7 +14,7 @@ import (
 	"github.com/ebfe/scard"
 )
 
-type PCSCDarwinDriver struct {
+type PCSCDriver struct {
 	ctx             *scard.Context
 	events          chan Event
 	stop            chan struct{}
@@ -23,13 +23,13 @@ type PCSCDarwinDriver struct {
 	lastCardPresent bool
 }
 
-func NewPCSCDriver() (*PCSCDarwinDriver, error) {
+func NewPCSCDriver() (*PCSCDriver, error) {
 	ctx, err := scard.EstablishContext()
 	if err != nil {
 		return nil, err
 	}
 
-	driver := &PCSCDarwinDriver{
+	driver := &PCSCDriver{
 		ctx:    ctx,
 		events: make(chan Event, 32),
 		stop:   make(chan struct{}),
@@ -39,11 +39,11 @@ func NewPCSCDriver() (*PCSCDarwinDriver, error) {
 	return driver, nil
 }
 
-func (d *PCSCDarwinDriver) DriverName() string {
+func (d *PCSCDriver) DriverName() string {
 	return "pcsc"
 }
 
-func (d *PCSCDarwinDriver) Health(context.Context) map[string]any {
+func (d *PCSCDriver) Health(context.Context) map[string]any {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 
@@ -58,13 +58,13 @@ func (d *PCSCDarwinDriver) Health(context.Context) map[string]any {
 	}
 }
 
-func (d *PCSCDarwinDriver) ListReaders(context.Context) ([]Reader, error) {
+func (d *PCSCDriver) ListReaders(context.Context) ([]Reader, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 	return d.listReadersLocked()
 }
 
-func (d *PCSCDarwinDriver) listReadersLocked() ([]Reader, error) {
+func (d *PCSCDriver) listReadersLocked() ([]Reader, error) {
 	readers, err := d.ctx.ListReaders()
 	if err != nil {
 		if errors.Is(err, scard.ErrNoReadersAvailable) {
@@ -84,7 +84,7 @@ func (d *PCSCDarwinDriver) listReadersLocked() ([]Reader, error) {
 	return items, nil
 }
 
-func (d *PCSCDarwinDriver) ConnectSession(_ context.Context, readerName string) (*Session, error) {
+func (d *PCSCDriver) ConnectSession(_ context.Context, readerName string) (*Session, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 
@@ -112,7 +112,7 @@ func (d *PCSCDarwinDriver) ConnectSession(_ context.Context, readerName string) 
 	return session, nil
 }
 
-func (d *PCSCDarwinDriver) ReadCard(_ context.Context, session *Session, operation string) (*CardReadResult, error) {
+func (d *PCSCDriver) ReadCard(_ context.Context, session *Session, operation string) (*CardReadResult, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 	if err := d.ensureCardPresentLocked(session.ReaderName); err != nil {
@@ -197,7 +197,7 @@ func (d *PCSCDarwinDriver) ReadCard(_ context.Context, session *Session, operati
 	return result, nil
 }
 
-func (d *PCSCDarwinDriver) WriteCard(_ context.Context, session *Session, request *WriteRequest) (*CardWriteResult, error) {
+func (d *PCSCDriver) WriteCard(_ context.Context, session *Session, request *WriteRequest) (*CardWriteResult, error) {
 	d.opMu.Lock()
 	defer d.opMu.Unlock()
 	if err := d.ensureCardPresentLocked(session.ReaderName); err != nil {
@@ -335,11 +335,11 @@ func (d *PCSCDarwinDriver) WriteCard(_ context.Context, session *Session, reques
 	return result, nil
 }
 
-func (d *PCSCDarwinDriver) Events() <-chan Event {
+func (d *PCSCDriver) Events() <-chan Event {
 	return d.events
 }
 
-func (d *PCSCDarwinDriver) Close() error {
+func (d *PCSCDriver) Close() error {
 	close(d.stop)
 	if d.ctx != nil {
 		return d.ctx.Release()
@@ -347,7 +347,7 @@ func (d *PCSCDarwinDriver) Close() error {
 	return nil
 }
 
-func (d *PCSCDarwinDriver) monitor() {
+func (d *PCSCDriver) monitor() {
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -396,7 +396,7 @@ func (d *PCSCDarwinDriver) monitor() {
 	}
 }
 
-func (d *PCSCDarwinDriver) emit(event Event) {
+func (d *PCSCDriver) emit(event Event) {
 	event.At = time.Now().UTC().Format(time.RFC3339)
 	select {
 	case d.events <- event:
@@ -404,7 +404,7 @@ func (d *PCSCDarwinDriver) emit(event Event) {
 	}
 }
 
-func (d *PCSCDarwinDriver) ensureCardPresentLocked(readerName string) error {
+func (d *PCSCDriver) ensureCardPresentLocked(readerName string) error {
 	states := []scard.ReaderState{{
 		Reader:       readerName,
 		CurrentState: scard.StateUnaware,
@@ -432,7 +432,7 @@ func (d *PCSCDarwinDriver) ensureCardPresentLocked(readerName string) error {
 	return nil
 }
 
-func (d *PCSCDarwinDriver) resolveReaderLocked(readerName string) (string, error) {
+func (d *PCSCDriver) resolveReaderLocked(readerName string) (string, error) {
 	readers, err := d.ctx.ListReaders()
 	if err != nil {
 		if errors.Is(err, scard.ErrNoReadersAvailable) {
