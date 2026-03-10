@@ -523,11 +523,15 @@ function buildWindows(version, outputDir, arch) {
     <Feature Id="MainFeature" Title="Web NFC Bridge Connector" Level="1">
       <ComponentGroupRef Id="ConnectorFiles" />
     </Feature>
+    <CustomAction Id="LaunchConnector" FileRef="ConnectorExe" ExeCommand="--watchdog" Return="asyncNoWait" />
+    <InstallExecuteSequence>
+      <Custom Action="LaunchConnector" After="InstallFinalize">NOT Installed OR REINSTALL</Custom>
+    </InstallExecuteSequence>
   </Package>
   <Fragment>
     <ComponentGroup Id="ConnectorFiles" Directory="INSTALLFOLDER">
       <Component Guid="*">
-        <File Source="${binaryPath.replace(/\\/g, "/")}" KeyPath="yes" />
+        <File Id="ConnectorExe" Source="${binaryPath.replace(/\\/g, "/")}" KeyPath="yes" />
       </Component>
       <Component Id="AutoStart" Guid="*">
         <RegistryValue Root="HKMU" Key="Software\\Microsoft\\Windows\\CurrentVersion\\Run" Name="NFCToolConnector" Type="string" Value="&quot;[INSTALLFOLDER]nfc-connector.exe&quot; --watchdog" KeyPath="yes" />
