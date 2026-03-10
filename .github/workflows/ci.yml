@@ -40,5 +40,8 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install PC/SC library
+        run: sudo apt-get update && sudo apt-get install -y libpcsclite-dev
+
       - name: Run connector tests
         run: go test ./connector/...
