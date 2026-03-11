@@ -59,6 +59,8 @@ const defaultAllowedOrigins = [
   "https://web-nfc-bridge.abcd854884.workers.dev.",
   "https://nfc.yudefine.com.tw",
   "https://nfc.yudefine.com.tw.",
+  "https://tdms.fcoem.tw",
+  "https://tdms.fcoem.tw.",
 ].join(",");
 const installerCatalog = [
   {

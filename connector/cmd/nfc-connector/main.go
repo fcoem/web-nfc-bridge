@@ -19,7 +19,7 @@ import (
 var version = "dev"
 var buildTime = "unknown"
 
-const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
+const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw.,https://tdms.fcoem.tw,https://tdms.fcoem.tw."
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--watchdog" {
