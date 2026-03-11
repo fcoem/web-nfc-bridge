@@ -517,8 +517,8 @@ async function handleWriteCard() {
             <div>
               <p class="font-semibold text-slate-700">Linux</p>
               <ul class="mt-1 list-inside list-disc space-y-0.5">
-                <li>停用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl stop nfc-connector && sudo systemctl disable nfc-connector</code></li>
-                <li>啟用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl enable nfc-connector && sudo systemctl start nfc-connector</code></li>
+                <li>停用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl stop web-nfc-bridge-connector && sudo systemctl disable web-nfc-bridge-connector</code></li>
+                <li>啟用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl enable web-nfc-bridge-connector && sudo systemctl start web-nfc-bridge-connector</code></li>
               </ul>
             </div>
           </div>
@@ -546,8 +546,8 @@ async function handleWriteCard() {
             <div>
               <p class="font-semibold text-slate-700">Linux</p>
               <ol class="mt-1 list-inside list-decimal space-y-0.5">
-                <li>執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl stop nfc-connector && sudo systemctl disable nfc-connector</code></li>
-                <li>執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo dpkg -r nfc-connector</code> 或 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo apt remove nfc-connector</code></li>
+                <li>執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo systemctl stop web-nfc-bridge-connector && sudo systemctl disable web-nfc-bridge-connector</code></li>
+                <li>執行 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo dpkg -r web-nfc-bridge-connector</code> 或 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">sudo apt remove web-nfc-bridge-connector</code></li>
               </ol>
             </div>
           </div>
