@@ -511,7 +511,7 @@ async function handleWriteCard() {
               <p class="font-semibold text-slate-700">Windows（以系統管理員身分開啟終端機）</p>
               <ul class="mt-1 list-inside list-disc space-y-0.5">
                 <li>停用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">taskkill /IM nfc-connector.exe /F</code> 並 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">reg delete HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v NFCToolConnector /f</code></li>
-                <li>啟用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v NFCToolConnector /d "\"%ProgramFiles%\Web NFC Bridge Connector\nfc-connector.exe\" --watchdog"</code></li>
+                <li>啟用：<code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Run /v NFCToolConnector /d "\"%ProgramFiles%\Web NFC Bridge Connector\nfc-connector.exe\" --watchdog"</code> 並 <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">Start-Process "%ProgramFiles%\Web NFC Bridge Connector\nfc-connector.exe" --watchdog</code></li>
               </ul>
             </div>
             <div>
