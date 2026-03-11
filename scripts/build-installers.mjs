@@ -334,16 +334,17 @@ function nativeOutputName(platform, version) {
   }
 }
 
-function buildGoBinary(outputPath, env) {
+function buildGoBinary(outputPath, env, { extraLdflags = "" } = {}) {
   ensureDir(dirname(outputPath));
   const buildVersion = env.BUILD_VERSION || "dev";
   const buildTime = env.BUILD_TIME || new Date().toISOString();
+  const ldflags = `-X main.version=${buildVersion} -X main.buildTime=${buildTime}${extraLdflags ? " " + extraLdflags : ""}`;
   run(
     "go",
     [
       "build",
       "-ldflags",
-      `-X main.version=${buildVersion} -X main.buildTime=${buildTime}`,
+      ldflags,
       "-o",
       outputPath,
       "./connector/cmd/nfc-connector",
@@ -499,12 +500,16 @@ function buildWindows(version, outputDir, arch) {
 
   const workDir = mkdtempSync(join(tmpdir(), `web-nfc-bridge-windows-${arch}-`));
   const binaryPath = join(workDir, "nfc-connector.exe");
-  buildGoBinary(binaryPath, {
-    BUILD_VERSION: version,
-    BUILD_TIME: new Date().toISOString(),
-    GOOS: "windows",
-    GOARCH: goArch,
-  });
+  buildGoBinary(
+    binaryPath,
+    {
+      BUILD_VERSION: version,
+      BUILD_TIME: new Date().toISOString(),
+      GOOS: "windows",
+      GOARCH: goArch,
+    },
+    { extraLdflags: "-H=windowsgui" },
+  );
 
   const wixSource = join(workDir, "connector.wxs");
   const upgradeCode =

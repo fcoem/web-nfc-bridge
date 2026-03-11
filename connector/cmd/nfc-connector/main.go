@@ -92,6 +92,7 @@ func runWatchdog() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Env = os.Environ()
+		hideWindow(cmd)
 
 		if err := cmd.Run(); err != nil {
 			log.Printf("watchdog: process exited: %v, restarting in %s", err, restartDelay)

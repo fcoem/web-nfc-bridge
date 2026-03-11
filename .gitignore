@@ -9,6 +9,7 @@ coverage/
 openspec/.vector-search.db*
 artifacts/
 /nfc-connector
+*.exe
 .wrangler/
 .dev.vars
 .DS_Store
