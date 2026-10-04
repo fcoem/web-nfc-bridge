@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +20,14 @@ import (
 var version = "dev"
 var buildTime = "unknown"
 
-const defaultAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw.,https://tdms.fcoem.tw,https://tdms.fcoem.tw."
+// publicAllowedOrigins must match publicAllowedOrigins in
+// scripts/lib/allowed-origins.mjs (checked by scripts/lib/allowed-origins.test.mjs).
+const publicAllowedOrigins = "http://localhost:*,https://localhost:*,http://127.0.0.1:*,https://127.0.0.1:*,https://web-nfc-bridge.abcd854884.workers.dev,https://web-nfc-bridge.abcd854884.workers.dev.,https://nfc.yudefine.com.tw,https://nfc.yudefine.com.tw."
+
+// extraAllowedOrigins is injected by scripts/build-installers.mjs via
+// -ldflags "-X main.extraAllowedOrigins=..." for downstream builds. Windows
+// installers set no environment, so this is the only way extra origins reach them.
+var extraAllowedOrigins = ""
 
 func main() {
 	initLogging()
@@ -31,17 +39,24 @@ func main() {
 
 	addr := getenv("NFC_CONNECTOR_ADDR", "127.0.0.1:42619")
 	secret := getenv("NFC_CONNECTOR_SHARED_SECRET", "development-shared-secret")
-	allowedOrigins := strings.Split(getenv("NFC_CONNECTOR_ALLOWED_ORIGINS", defaultAllowedOrigins), ",")
+	allowedOrigins := resolveAllowedOrigins(os.Getenv("NFC_CONNECTOR_ALLOWED_ORIGINS"))
 
 	var driver bridge.Driver
 	pcscDriver, pcscErr := bridge.NewPCSCDriver()
 	if pcscErr == nil {
 		health := pcscDriver.Health(context.Background())
 		if health["status"] == "ok" {
-			driver = pcscDriver
+			// Verify PCSC has a real NFC reader, not just a generic smart card driver.
+			// On some Windows machines (x86 and ARM64), PCSC context is valid but
+			// SCardListReaders returns a generic reader (e.g. "智慧卡讀取裝置")
+			// that cannot handle NFC APDU commands.
+			if bridge.HasNFCCapableReader(pcscDriver) {
+				driver = pcscDriver
+			} else {
+				log.Printf("pcsc driver ok but no NFC-capable reader found (generic smart card driver?), trying direct driver")
+			}
 		} else {
 			log.Printf("pcsc driver degraded (status=%v), trying direct driver", health["status"])
-			pcscDriver.Close()
 		}
 	} else {
 		log.Printf("pcsc driver unavailable: %v", pcscErr)
@@ -49,10 +64,17 @@ func main() {
 
 	if driver == nil {
 		directDriver, directErr := bridge.NewDirectDriver()
-		if directErr != nil {
+		if directErr == nil {
+			driver = directDriver
+			if pcscDriver != nil {
+				pcscDriver.Close()
+			}
+		} else if pcscDriver != nil {
+			log.Printf("direct driver unavailable: %v; using degraded pcsc driver (will recover when pcscd starts)", directErr)
+			driver = pcscDriver
+		} else {
 			log.Fatalf("no working driver available: pcsc=%v direct=%v", pcscErr, directErr)
 		}
-		driver = directDriver
 	}
 	defer driver.Close()
 
@@ -90,19 +112,46 @@ func runWatchdog() {
 
 	log.Printf("watchdog: supervising %s", exe)
 	for {
-		cmd := exec.Command(exe)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Env = os.Environ()
-		hideWindow(cmd)
-
-		if err := cmd.Run(); err != nil {
+		if err := superviseOnce(exe, nil, log.Writer()); err != nil {
 			log.Printf("watchdog: process exited: %v, restarting in %s", err, restartDelay)
 		} else {
 			log.Printf("watchdog: process exited cleanly, restarting in %s", restartDelay)
 		}
 		time.Sleep(restartDelay)
 	}
+}
+
+// superviseOnce runs one child process to completion. Its stdout and stderr
+// (including Go runtime crash output) go through a pipe into out, so the
+// watchdog's log is the only writer of the log file and owns rotation.
+func superviseOnce(exe string, args []string, out io.Writer) error {
+	cmd := exec.Command(exe, args...)
+	cmd.Stdout = out
+	cmd.Stderr = out
+	cmd.Env = supervisedChildEnv(os.Environ())
+	hideWindow(cmd)
+	return cmd.Run()
+}
+
+// resolveAllowedOrigins returns the origins from NFC_CONNECTOR_ALLOWED_ORIGINS
+// when set; otherwise the built-in public origins plus any build-time extras.
+func resolveAllowedOrigins(fromEnv string) []string {
+	raw := fromEnv
+	if strings.TrimSpace(raw) == "" {
+		raw = publicAllowedOrigins + "," + extraAllowedOrigins
+	}
+
+	origins := []string{}
+	seen := map[string]bool{}
+	for _, origin := range strings.Split(raw, ",") {
+		origin = strings.TrimSpace(origin)
+		if origin == "" || seen[origin] {
+			continue
+		}
+		seen[origin] = true
+		origins = append(origins, origin)
+	}
+	return origins
 }
 
 func getenv(key string, fallback string) string {

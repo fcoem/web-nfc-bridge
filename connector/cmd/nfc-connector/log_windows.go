@@ -3,52 +3,43 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 )
 
-const maxLogBytes = 1 << 20 // 1 MB
-
+// initLogging sends all output to %LOCALAPPDATA%\Web NFC Bridge Connector\connector.log.
+// Windows builds use -H=windowsgui, which leaves the process without a console,
+// so without this a crash on startup leaves no trace.
 func initLogging() {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		return // fall back to default (nowhere on windowsgui)
-	}
-
-	logDir := filepath.Join(dir, "Web NFC Bridge Connector")
-	if err := os.MkdirAll(logDir, 0o755); err != nil {
+	if isSupervisedChild() {
+		// stdout/stderr are pipes the watchdog copies into its log file; that
+		// includes Go runtime crash output, which is written to fd 2.
 		return
 	}
 
-	logPath := filepath.Join(logDir, "connector.log")
-
-	// Rotate: if the file exceeds maxLogBytes, rename to .old and start fresh.
-	if info, err := os.Stat(logPath); err == nil && info.Size() > maxLogBytes {
-		_ = os.Rename(logPath, logPath+".old")
-	}
-
-	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	// os.UserCacheDir is %LocalAppData% on Windows.
+	dir, err := os.UserCacheDir()
 	if err != nil {
 		return
 	}
 
-	log.SetOutput(f)
+	w, err := openRotatingLog(filepath.Join(dir, logDirName), maxLogBytes, setCrashOutput)
+	if err != nil {
+		return
+	}
+
+	// runWatchdog passes log.Writer() to the child as stdout/stderr, so this
+	// process is the only writer of the log file.
+	log.SetOutput(w)
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.Printf("--- log init (pid=%d) ---", os.Getpid())
-
-	// Also redirect the child process stdout/stderr to this file when running
-	// as watchdog. We redirect os.Stderr so that the watchdog's exec.Command
-	// inherits it.
-	redirectStderr(f)
-
-	fmt.Fprintf(os.Stderr, "") // ensure stderr fd is valid after redirect
 }
 
-// redirectStderr points os.Stderr to the given file so child processes
-// spawned with cmd.Stderr = os.Stderr will inherit file-based logging.
-func redirectStderr(f *os.File) {
-	os.Stderr = f
-	os.Stdout = f
+// setCrashOutput sends unhandled panics and fatal runtime errors, which write
+// to fd 2 (absent under -H=windowsgui), to the current log file. Called with
+// nil it releases the previous file so rotation can rename it.
+func setCrashOutput(f *os.File) {
+	_ = debug.SetCrashOutput(f, debug.CrashOptions{})
 }
